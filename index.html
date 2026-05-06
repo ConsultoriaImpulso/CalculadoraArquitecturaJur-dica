@@ -231,6 +231,45 @@ h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
   line-height: 1.4;
 }
 
+/* ============ ADDON EXTRAS (collapsible) ============ */
+.addon-item { margin-bottom: 8px; }
+.addon-toggle {
+  background: none; border: none;
+  color: var(--muted); font-size: 12px;
+  font-family: inherit; cursor: pointer;
+  padding: 4px 0; margin-top: 2px; margin-bottom: 4px;
+  display: inline-flex; align-items: center; gap: 4px;
+  transition: color 0.15s ease;
+  letter-spacing: 0.02em;
+}
+.addon-toggle:hover { color: var(--accent); }
+.addon-toggle .arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.addon-toggle.expanded .arrow { transform: rotate(180deg); }
+.addon-extras {
+  display: none;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 6px 0 14px 0;
+  padding: 14px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--line-soft);
+}
+.addon-extras.expanded { display: grid; }
+.addon-extras-field { display: flex; flex-direction: column; gap: 4px; }
+.addon-extras-label {
+  font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  font-family: var(--mono); font-weight: 500;
+}
+.addon-extras-hint { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+@media (max-width: 600px) {
+  .addon-extras { grid-template-columns: 1fr; }
+}
+
 /* ============ FIELDS ============ */
 .field-group { margin-bottom: 22px; }
 .field-label {
@@ -1544,7 +1583,8 @@ const state = {
   applyVat: true,
   vat: 21,
   includeAddons: false,
-  addons: [{ name: '', price: '' }],
+  addons: [{ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', expanded: false }],
+  addonsHaveExtras: true,
   includeDiscounts: false,
   discounts: [{ name: '', rate: '' }],
   includeExtraTaxes: false,
@@ -1790,18 +1830,43 @@ function updateCostsSummary() {
 function renderAddons() {
   const list = document.getElementById('addonsList');
   list.innerHTML = '';
+  const showExtras = state.addonsHaveExtras !== false;
   state.addons.forEach((a, i) => {
-    const row = document.createElement('div');
-    row.className = 'row-grid';
-    row.innerHTML = `
-      <input class="field-input" type="text" placeholder="Ej. Seguimiento 3 meses" value="${esc(a.name)}" data-i="${i}" data-f="name" aria-label="Nombre del servicio adicional">
-      <div class="input-with-suffix">
-        <input class="field-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${esc(a.price)}" data-i="${i}" data-f="price" aria-label="Precio">
-        <span class="input-suffix">€</span>
+    const wrap = document.createElement('div');
+    wrap.className = 'addon-item';
+    const expanded = a.expanded ? 'expanded' : '';
+    wrap.innerHTML = `
+      <div class="row-grid">
+        <input class="field-input" type="text" placeholder="Ej. Seguimiento 3 meses" value="${esc(a.name)}" data-i="${i}" data-f="name" aria-label="Nombre del servicio adicional">
+        <div class="input-with-suffix">
+          <input class="field-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${esc(a.price)}" data-i="${i}" data-f="price" aria-label="Precio">
+          <span class="input-suffix">€</span>
+        </div>
+        <button class="btn-icon" data-del="${i}" title="Eliminar fila" aria-label="Eliminar fila" type="button">×</button>
       </div>
-      <button class="btn-icon" data-del="${i}" title="Eliminar fila" aria-label="Eliminar fila" type="button">×</button>
+      ${showExtras ? `
+      <button type="button" class="addon-toggle ${expanded}" data-toggle="${i}">
+        <span class="arrow">▾</span> Costes asociados a este servicio
+      </button>
+      <div class="addon-extras ${expanded}" data-extras="${i}">
+        <div class="addon-extras-field">
+          <label class="addon-extras-label">Tiempo extra (min/ud)</label>
+          <input class="field-input" type="number" inputmode="numeric" min="0" step="1" placeholder="0" value="${esc(a.extraMinutes)}" data-i="${i}" data-f="extraMinutes">
+          <span class="addon-extras-hint">Mano de obra adicional por unidad. Aplica curva de aprendizaje.</span>
+        </div>
+        <div class="addon-extras-field">
+          <label class="addon-extras-label">Coste directo extra (€/ud)</label>
+          <input class="field-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${esc(a.extraDirect)}" data-i="${i}" data-f="extraDirect">
+          <span class="addon-extras-hint">Por unidad. Escala con la cantidad.</span>
+        </div>
+        <div class="addon-extras-field">
+          <label class="addon-extras-label">Coste indirecto extra (€)</label>
+          <input class="field-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${esc(a.extraIndirect)}" data-i="${i}" data-f="extraIndirect">
+          <span class="addon-extras-hint">Total del lote. No escala con la cantidad.</span>
+        </div>
+      </div>` : ''}
     `;
-    list.appendChild(row);
+    list.appendChild(wrap);
   });
   list.querySelectorAll('input').forEach(el => {
     el.addEventListener('input', e => {
@@ -1814,15 +1879,24 @@ function renderAddons() {
     btn.addEventListener('click', () => {
       const i = +btn.dataset.del;
       state.addons.splice(i, 1);
-      if (state.addons.length === 0) state.addons.push({ name: '', price: '' });
+      if (state.addons.length === 0) state.addons.push({ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', expanded: false });
       renderAddons(); compute();
+    });
+  });
+  list.querySelectorAll('[data-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = +btn.dataset.toggle;
+      state.addons[i].expanded = !state.addons[i].expanded;
+      btn.classList.toggle('expanded');
+      const extrasEl = list.querySelector(`[data-extras="${i}"]`);
+      if (extrasEl) extrasEl.classList.toggle('expanded');
     });
   });
   document.getElementById('includeAddons').checked = state.includeAddons;
   document.getElementById('addonsSection').dataset.collapsed = !state.includeAddons;
 }
 document.getElementById('addAddon').addEventListener('click', () => {
-  state.addons.push({ name: '', price: '' });
+  state.addons.push({ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', expanded: false });
   renderAddons();
 });
 document.getElementById('includeAddons').addEventListener('change', e => {
@@ -2092,7 +2166,8 @@ const TEMPLATES = {
     includeDiscounts: true,
     discounts: [
       { name: 'Socios ANEAC', rate: '30.77' }
-    ]
+    ],
+    addonsHaveExtras: false
   }
 };
 
@@ -2111,7 +2186,8 @@ function applyTemplate(id) {
     state.includeDiscounts = false;
     state.discounts = [{ name: '', rate: '' }];
     state.includeAddons = false;
-    state.addons = [{ name: '', price: '' }];
+    state.addons = [{ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', expanded: false }];
+    state.addonsHaveExtras = true;
   } else {
     const t = TEMPLATES[id];
     state.productName = t.productName;
@@ -2129,7 +2205,8 @@ function applyTemplate(id) {
     if (t.includeDiscounts !== undefined) state.includeDiscounts = t.includeDiscounts;
     if (t.discounts) state.discounts = t.discounts.map(d => ({ ...d }));
     if (t.includeAddons !== undefined) state.includeAddons = t.includeAddons;
-    if (t.addons) state.addons = t.addons.map(a => ({ ...a }));
+    if (t.addons) state.addons = t.addons.map(a => ({ ...a, expanded: false }));
+    state.addonsHaveExtras = (t.addonsHaveExtras !== false);
   }
   // Refresh visible inputs in step 1
   document.getElementById('productName').value = state.productName;
@@ -2252,8 +2329,25 @@ function compute() {
   const learningDiscount = learningEnabled ? rawLearningDiscount : 0;
   const learningFactor = 1 - learningDiscount / 100;
 
-  const { cost: laborUnit, totalMin: totalMinUnit, hours: hoursUnit, hourly, annualHours } = calcLabor();
-  const { directs: directsUnit, indirects, fixed: fixedRaw, suplidos: suplidosUnit } = calcCosts();
+  const { cost: laborUnitBase, totalMin: totalMinUnitBase, hours: hoursUnitBase, hourly, annualHours } = calcLabor();
+  const { directs: directsUnitBase, indirects: indirectsBase, fixed: fixedRaw, suplidos: suplidosUnit } = calcCosts();
+
+  // Addon-associated costs (only counted when the addons section is included)
+  const addonsExtraMinutesUnit = state.includeAddons
+    ? state.addons.reduce((s, a) => s + num(a.extraMinutes), 0) : 0;
+  const addonsExtraDirectsUnit = state.includeAddons
+    ? state.addons.reduce((s, a) => s + num(a.extraDirect), 0) : 0;
+  const addonsExtraIndirects = state.includeAddons
+    ? state.addons.reduce((s, a) => s + num(a.extraIndirect), 0) : 0;
+  // Addon time costs at the same hourly rate as base labor
+  const addonsExtraLaborUnit = (addonsExtraMinutesUnit / 60) * hourly;
+
+  // Aggregate per-unit and total costs (incl. addon extras)
+  const totalMinUnit = totalMinUnitBase + addonsExtraMinutesUnit;
+  const hoursUnit = hoursUnitBase + addonsExtraMinutesUnit / 60;
+  const laborUnit = laborUnitBase + addonsExtraLaborUnit;
+  const directsUnit = directsUnitBase + addonsExtraDirectsUnit;
+  const indirects = indirectsBase + addonsExtraIndirects;
 
   // Variable costs scale with quantity. Indirects are overhead — do NOT scale.
   // Labor scales with quantity AND benefits from the learning curve.
