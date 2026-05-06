@@ -1141,6 +1141,21 @@ footer {
       </div>
 
       <div class="section-divider" style="margin-top: 8px;">
+        <div class="section-title">Servicios adicionales</div>
+        <div class="section-divider-line"></div>
+        <label class="switch">
+          <input type="checkbox" id="includeAddons">
+          <span class="switch-track"></span>
+          <span>Incluir</span>
+        </label>
+      </div>
+      <div class="section-content" id="addonsSection" data-collapsed="true">
+        <span class="field-hint" style="display: block; margin-bottom: 12px;">Cargos extra <strong>por unidad</strong> que se suman al precio del servicio base (ej. guardado de información, seguimiento posterior, asistencia adicional). Se aplican antes del descuento y del IVA.</span>
+        <div id="addonsList"></div>
+        <button class="btn-add" id="addAddon" type="button">+ Añadir servicio adicional</button>
+      </div>
+
+      <div class="section-divider" style="margin-top: 8px;">
         <div class="section-title">Descuentos</div>
         <div class="section-divider-line"></div>
         <label class="switch">
@@ -1528,6 +1543,8 @@ const state = {
   serviceInput: '',
   applyVat: true,
   vat: 21,
+  includeAddons: false,
+  addons: [{ name: '', price: '' }],
   includeDiscounts: false,
   discounts: [{ name: '', rate: '' }],
   includeExtraTaxes: false,
@@ -1770,6 +1787,50 @@ function updateCostsSummary() {
   document.getElementById('s-internal').classList.toggle('muted', internal === 0);
 }
 
+function renderAddons() {
+  const list = document.getElementById('addonsList');
+  list.innerHTML = '';
+  state.addons.forEach((a, i) => {
+    const row = document.createElement('div');
+    row.className = 'row-grid';
+    row.innerHTML = `
+      <input class="field-input" type="text" placeholder="Ej. Seguimiento 3 meses" value="${esc(a.name)}" data-i="${i}" data-f="name" aria-label="Nombre del servicio adicional">
+      <div class="input-with-suffix">
+        <input class="field-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${esc(a.price)}" data-i="${i}" data-f="price" aria-label="Precio">
+        <span class="input-suffix">€</span>
+      </div>
+      <button class="btn-icon" data-del="${i}" title="Eliminar fila" aria-label="Eliminar fila" type="button">×</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', e => {
+      const i = +e.target.dataset.i, f = e.target.dataset.f;
+      state.addons[i][f] = e.target.value;
+      compute();
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = +btn.dataset.del;
+      state.addons.splice(i, 1);
+      if (state.addons.length === 0) state.addons.push({ name: '', price: '' });
+      renderAddons(); compute();
+    });
+  });
+  document.getElementById('includeAddons').checked = state.includeAddons;
+  document.getElementById('addonsSection').dataset.collapsed = !state.includeAddons;
+}
+document.getElementById('addAddon').addEventListener('click', () => {
+  state.addons.push({ name: '', price: '' });
+  renderAddons();
+});
+document.getElementById('includeAddons').addEventListener('change', e => {
+  state.includeAddons = e.target.checked;
+  document.getElementById('addonsSection').dataset.collapsed = !state.includeAddons;
+  compute();
+});
+
 function renderDiscounts() {
   const list = document.getElementById('discountsList');
   list.innerHTML = '';
@@ -1940,6 +2001,7 @@ function initFinalStep() {
   document.getElementById('vatInput').value = state.vat;
   document.getElementById('vatInput').disabled = !state.applyVat;
   document.getElementById('applyVat').checked = state.applyVat;
+  renderAddons();
   renderDiscounts();
   renderExtraTaxes();
   renderRetentions();
@@ -2048,6 +2110,8 @@ function applyTemplate(id) {
     state.serviceInput = '';
     state.includeDiscounts = false;
     state.discounts = [{ name: '', rate: '' }];
+    state.includeAddons = false;
+    state.addons = [{ name: '', price: '' }];
   } else {
     const t = TEMPLATES[id];
     state.productName = t.productName;
@@ -2064,6 +2128,8 @@ function applyTemplate(id) {
     if (t.vat !== undefined) state.vat = t.vat;
     if (t.includeDiscounts !== undefined) state.includeDiscounts = t.includeDiscounts;
     if (t.discounts) state.discounts = t.discounts.map(d => ({ ...d }));
+    if (t.includeAddons !== undefined) state.includeAddons = t.includeAddons;
+    if (t.addons) state.addons = t.addons.map(a => ({ ...a }));
   }
   // Refresh visible inputs in step 1
   document.getElementById('productName').value = state.productName;
@@ -2103,7 +2169,7 @@ const DEFAULT_ISSUER = {
   postal: '37790',
   city: 'Fuentes de Béjar',
   province: 'Salamanca',
-  phone: '+34 677 962 321 ',
+  phone: '',
   email: 'administracion@arquitecturajuridica.com'
 };
 
@@ -2255,6 +2321,15 @@ function compute() {
   box.style.display = 'block';
   empty.style.display = 'none';
 
+  // Addons (extra services charged on top of the base unit price, BEFORE discount)
+  const addonsList = state.includeAddons
+    ? state.addons
+        .map(a => ({ name: (a.name || '').trim() || 'Servicio adicional', price: num(a.price) }))
+        .filter(a => a.price > 0)
+    : [];
+  const addonsUnitTotal = addonsList.reduce((s, a) => s + a.price, 0);
+  const addonsTotal = addonsUnitTotal * quantity;
+
   // Discounts (applied to the service price BEFORE VAT)
   const discountsList = state.includeDiscounts
     ? state.discounts
@@ -2264,13 +2339,14 @@ function compute() {
   const discountTotalRate = discountsList.reduce((s, d) => s + d.rate, 0) / 100;
   const discountFactor = Math.max(0, 1 - discountTotalRate);
 
-  // grossPrice = price before discount (what user enters or what we recommend invoicing)
-  // netPrice   = price after discount (what the professional actually receives, the taxable base)
-  // grossPrice / netPrice are TOTALS (unit price × quantity). User enters unit price.
+  // grossPrice = total before discount, INCLUDING addons (taxable base before discount)
+  // netPrice   = price after discount (taxable base for VAT)
+  // unitPrice  = service base unit price (what the user enters in profitability mode)
   let grossPrice, netPrice, profit, profitPct, unitPrice;
   if (state.mode === 'profitability') {
     unitPrice = v;
-    grossPrice = unitPrice * quantity;
+    // Total = (base + addons) * quantity
+    grossPrice = (unitPrice + addonsUnitTotal) * quantity;
     netPrice = grossPrice * discountFactor;
     profit = netPrice - internal;
     profitPct = netPrice > 0 ? (profit / netPrice) * 100 : 0;
@@ -2278,7 +2354,8 @@ function compute() {
     profitPct = v;
     netPrice = internal / (1 - v / 100);
     grossPrice = discountFactor > 0 ? netPrice / discountFactor : netPrice;
-    unitPrice = grossPrice / quantity;
+    // Subtract the addons from the gross to get the recommended base service price per unit
+    unitPrice = (grossPrice - addonsTotal) / quantity;
     profit = netPrice - internal;
   }
   const discountAmounts = discountsList.map(d => ({ ...d, amount: grossPrice * d.rate / 100 }));
@@ -2618,6 +2695,22 @@ function compute() {
   if (quantity > 1) {
     finalRows.push({ lbl: 'Precio unitario (sin IVA)', val: fmt(unitPrice) });
     finalRows.push({ lbl: 'Cantidad', val: `× ${quantity} uds` });
+  }
+
+  // Addons: shown as line items between base price and discounts
+  if (addonsList.length > 0) {
+    if (isSummary) {
+      finalRows.push({ lbl: 'Servicios adicionales', val: '+ ' + fmt(addonsTotal) });
+    } else {
+      addonsList.forEach(a => {
+        finalRows.push({
+          lbl: quantity > 1
+            ? `${esc(a.name)} (${fmt(a.price)} × ${quantity})`
+            : esc(a.name),
+          val: '+ ' + fmt(a.price * quantity)
+        });
+      });
+    }
   }
 
   if (discountAmounts.length > 0) {
