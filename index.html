@@ -1097,7 +1097,7 @@ footer {
           <span>Incluir</span>
         </label>
       </div>
-      <div class="section-content" id="suplidoSection">
+      <div class="section-content" id="suplidoSection" data-collapsed="true">
         <div id="suplidoList"></div>
         <button class="btn-add" id="addSuplido" type="button">+ Añadir suplido</button>
       </div>
@@ -1576,7 +1576,7 @@ const state = {
   directs: [{ name: '', price: '' }],
   includeIndirects: true,
   indirects: [{ name: '', price: '' }],
-  includeSuplidos: true,
+  includeSuplidos: false,
   suplidos: [{ name: '', price: '' }],
   productName: '',
   quantity: 1,
