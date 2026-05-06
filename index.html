@@ -191,6 +191,46 @@ h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
 }
 .mode-text { color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
 
+/* ============ TEMPLATES ============ */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.template-card {
+  padding: 14px 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+.template-card:hover {
+  border-color: var(--ink);
+  background: var(--bg);
+}
+.template-card.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.template-title {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+.template-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 /* ============ FIELDS ============ */
 .field-group { margin-bottom: 22px; }
 .field-label {
@@ -330,6 +370,10 @@ h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
   opacity: 0.35; pointer-events: none;
   filter: grayscale(0.5);
   transition: opacity 0.2s, filter 0.2s;
+}
+/* The quote/invoice section takes a lot of space, so collapse it fully when off */
+#quoteSection[data-collapsed="true"] {
+  display: none;
 }
 
 /* ============ SUMMARY ============ */
@@ -862,7 +906,23 @@ footer {
         <p class="panel-desc">Pon nombre al trámite y elige cómo trabajar el cálculo. Puedes volver y cambiar de modo en cualquier momento.</p>
       </div>
 
-      <div class="field-group">
+      <div class="section-divider" style="margin-top: 0;">
+        <div class="section-title">Plantilla</div>
+        <div class="section-divider-line"></div>
+      </div>
+      <span class="field-hint" style="display: block; margin-bottom: 12px;">Empieza desde una plantilla pre-rellenada o desde cero.</span>
+      <div class="template-grid" id="templateGrid">
+        <button class="template-card active" data-template="" type="button">
+          <div class="template-title">Trámite en blanco</div>
+          <div class="template-desc">Empieza desde cero, definiendo procesos y costes manualmente.</div>
+        </button>
+        <button class="template-card" data-template="baja-vehiculos" type="button">
+          <div class="template-title">Baja de Vehículos por Abandono</div>
+          <div class="template-desc">Recinto privado. Procesos, costes directos e indirectos pre-rellenados.</div>
+        </button>
+      </div>
+
+      <div class="field-group" style="margin-top: 28px;">
         <label class="field-label" for="productName">Nombre del trámite</label>
         <span class="field-hint">Aparecerá en el documento final descargable.</span>
         <input type="text" class="field-input" id="productName" placeholder="Ej. Constitución de SL">
@@ -1177,7 +1237,10 @@ footer {
           <span><strong>Atención:</strong> esta herramienta <strong>no es un generador oficial de facturas</strong>. El documento producido es un cálculo profesional para uso interno, oferta comercial o referencia. Antes de enviar al cliente, comprueba toda la información y asegúrate de que cumple la normativa fiscal vigente y los requisitos de tu asesoría.</span>
         </div>
 
-        <div class="subsection-title" style="margin-top: 24px;">Tus datos (emisor)</div>
+        <div class="subsection-title" style="margin-top: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+          <span>Tus datos (emisor)</span>
+          <button type="button" class="btn btn-ghost" id="loadDefaultIssuer" style="font-size: 12px; padding: 6px 12px; min-height: 0;">Cargar Arquitectura Jurídica</button>
+        </div>
 
         <div class="field-group">
           <label class="field-label" for="issuerName">Nombre o empresa</label>
@@ -1451,7 +1514,7 @@ const state = {
   visited: new Set([0]),
   mode: null,
   processes: [{ name: '', minutes: '' }],
-  annualSalary: '',
+  annualSalary: '18000',
   annualHours: 1760,
   includeDirects: true,
   directs: [{ name: '', price: '' }],
@@ -1933,9 +1996,144 @@ document.getElementById('applyVat').addEventListener('change', e => {
   compute();
 });
 
+// Default issuer profile (Arquitectura Jurídica) — used by the "Load default" button
+// and auto-applied when the user enables Quote/Invoice mode for the first time.
+// Pre-built service templates. Each template fills the form across all steps.
+const TEMPLATES = {
+  'baja-vehiculos': {
+    productName: 'Baja de Vehículos por Abandono en Recinto Privado',
+    mode: 'profitability',
+    processes: [
+      { name: 'Recopilación de información inicial', minutes: '5' },
+      { name: 'Organización y creación documentación', minutes: '20' },
+      { name: 'Envío de documentación inicial para firmar', minutes: '5' },
+      { name: 'Envío burofax y PEE', minutes: '10' },
+      { name: 'Registro de Solicitud Baja DGT', minutes: '10' },
+      { name: 'Firma de declaraciones finales y envío de resoluciones', minutes: '5' },
+      { name: 'Correos de seguimiento', minutes: '20' }
+    ],
+    includeDirects: true,
+    directs: [
+      { name: 'Burofax correos y certificado', price: '31.15' },
+      { name: 'Informe detallado vehículo', price: '8.67' }
+    ],
+    includeIndirects: true,
+    indirects: [
+      { name: 'Signaturit', price: '3' },
+      { name: 'Licencia IA Claude (5% del total)', price: '4.5' }
+    ],
+    includeSuplidos: false,
+    suplidos: [{ name: '', price: '' }],
+    serviceInput: '195',
+    applyVat: true,
+    vat: '21',
+    includeDiscounts: true,
+    discounts: [
+      { name: 'Socios ANEAC', rate: '30.77' }
+    ]
+  }
+};
+
+function applyTemplate(id) {
+  if (!id || !TEMPLATES[id]) {
+    // "Trámite en blanco" → reset trámite-related state
+    state.productName = '';
+    state.processes = [{ name: '', minutes: '' }];
+    state.includeDirects = true;
+    state.directs = [{ name: '', price: '' }];
+    state.includeIndirects = true;
+    state.indirects = [{ name: '', price: '' }];
+    state.includeSuplidos = true;
+    state.suplidos = [{ name: '', price: '' }];
+    state.serviceInput = '';
+    state.includeDiscounts = false;
+    state.discounts = [{ name: '', rate: '' }];
+  } else {
+    const t = TEMPLATES[id];
+    state.productName = t.productName;
+    if (t.mode) state.mode = t.mode;
+    state.processes = t.processes.map(p => ({ ...p }));
+    state.includeDirects = t.includeDirects;
+    state.directs = t.directs.map(d => ({ ...d }));
+    state.includeIndirects = t.includeIndirects;
+    state.indirects = t.indirects.map(d => ({ ...d }));
+    state.includeSuplidos = t.includeSuplidos;
+    state.suplidos = t.suplidos.map(s => ({ ...s }));
+    if (t.serviceInput !== undefined) state.serviceInput = t.serviceInput;
+    if (t.applyVat !== undefined) state.applyVat = t.applyVat;
+    if (t.vat !== undefined) state.vat = t.vat;
+    if (t.includeDiscounts !== undefined) state.includeDiscounts = t.includeDiscounts;
+    if (t.discounts) state.discounts = t.discounts.map(d => ({ ...d }));
+  }
+  // Refresh visible inputs in step 1
+  document.getElementById('productName').value = state.productName;
+  // Update active state on template cards
+  document.querySelectorAll('#templateGrid .template-card').forEach(c => {
+    c.classList.toggle('active', (c.dataset.template || '') === (id || ''));
+  });
+  // Update mode card selection if mode was set
+  if (id && TEMPLATES[id] && TEMPLATES[id].mode) {
+    document.querySelectorAll('.mode-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.mode === state.mode);
+    });
+    // Enable next button since both name and mode are set
+    const btn0 = document.getElementById('btn-next-0');
+    if (btn0) btn0.disabled = false;
+  }
+}
+
+document.querySelectorAll('#templateGrid .template-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const id = card.dataset.template || '';
+    applyTemplate(id);
+    if (id) {
+      showToast('Plantilla aplicada: ' + TEMPLATES[id].productName);
+    }
+  });
+});
+
+
+// Default issuer profile (Arquitectura Jurídica) — used by the "Load default" button
+// and auto-applied when the user enables Quote/Invoice mode for the first time.
+const DEFAULT_ISSUER = {
+  name: 'Arquitectura Jurídica S.L',
+  nif: 'B37582236',
+  street: 'Calle Iglesia',
+  number: '24',
+  postal: '37790',
+  city: 'Fuentes de Béjar',
+  province: 'Salamanca',
+  phone: '',
+  email: 'administracion@arquitecturajuridica.com'
+};
+
+function isIssuerEmpty() {
+  return !Object.values(state.issuer).some(v => (v || '').trim());
+}
+
+function applyDefaultIssuer() {
+  Object.assign(state.issuer, DEFAULT_ISSUER);
+  // Reflect in the form fields
+  Object.keys(DEFAULT_ISSUER).forEach(k => {
+    const el = document.getElementById('issuer' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (el) el.value = DEFAULT_ISSUER[k];
+  });
+  compute();
+}
+
+document.getElementById('loadDefaultIssuer').addEventListener('click', () => {
+  applyDefaultIssuer();
+  showToast('Datos de Arquitectura Jurídica cargados');
+});
+
 document.getElementById('isQuote').addEventListener('change', e => {
   state.isQuote = e.target.checked;
   document.getElementById('quoteSection').dataset.collapsed = !state.isQuote;
+  // Auto-fill the issuer with Arquitectura Jurídica when enabling Quote/Invoice
+  // mode for the first time — only if no issuer data was entered yet.
+  if (state.isQuote && isIssuerEmpty()) {
+    applyDefaultIssuer();
+  }
   compute();
 });
 ['issuerName', 'issuerNif', 'issuerStreet', 'issuerNumber', 'issuerPostal', 'issuerCity', 'issuerProvince', 'issuerPhone', 'issuerEmail'].forEach(id => {
