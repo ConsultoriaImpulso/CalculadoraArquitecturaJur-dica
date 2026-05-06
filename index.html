@@ -1570,7 +1570,7 @@ const state = {
   visited: new Set([0]),
   mode: null,
   processes: [{ name: '', minutes: '' }],
-  annualSalary: '18000',
+  annualSalary: '',
   annualHours: 1760,
   includeDirects: true,
   directs: [{ name: '', price: '' }],
@@ -2174,6 +2174,7 @@ const TEMPLATES = {
     serviceInput: '195',
     applyVat: true,
     vat: '21',
+    annualSalary: '18000',
     includeDiscounts: true,
     discounts: [
       { name: 'Socios ANEAC', rate: '30.77' }
@@ -2213,6 +2214,7 @@ function applyTemplate(id) {
     if (t.serviceInput !== undefined) state.serviceInput = t.serviceInput;
     if (t.applyVat !== undefined) state.applyVat = t.applyVat;
     if (t.vat !== undefined) state.vat = t.vat;
+    if (t.annualSalary !== undefined) state.annualSalary = t.annualSalary;
     if (t.includeDiscounts !== undefined) state.includeDiscounts = t.includeDiscounts;
     if (t.discounts) state.discounts = t.discounts.map(d => ({ ...d }));
     if (t.includeAddons !== undefined) state.includeAddons = t.includeAddons;
@@ -2936,7 +2938,7 @@ function resetForNewTramite() {
   state.showSuplidosToClient = true;
   // Keep: state.issuer, state.annualSalary, state.annualHours
   // Reset progress to step 0
-  state.visited = [true, false, false, false];
+  state.visited = new Set([0]);
   go(0);
   // Clear mode card selection
   document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
