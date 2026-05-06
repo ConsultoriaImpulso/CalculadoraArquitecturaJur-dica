@@ -406,12 +406,6 @@ h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
   font-weight: 400; letter-spacing: -0.01em;
 }
 .section-content[data-collapsed="true"] {
-  opacity: 0.35; pointer-events: none;
-  filter: grayscale(0.5);
-  transition: opacity 0.2s, filter 0.2s;
-}
-/* The quote/invoice section takes a lot of space, so collapse it fully when off */
-#quoteSection[data-collapsed="true"] {
   display: none;
 }
 
@@ -1396,8 +1390,13 @@ footer {
       <div class="section-divider">
         <div class="section-title">Notas u observaciones</div>
         <div class="section-divider-line"></div>
+        <label class="switch">
+          <input type="checkbox" id="includeNotes">
+          <span class="switch-track"></span>
+          <span>Incluir</span>
+        </label>
       </div>
-      <div class="field-group">
+      <div class="section-content" id="notesSection" data-collapsed="true">
         <span class="field-hint" style="display: block; margin-bottom: 8px;">Texto libre que aparecerá al final del documento descargable (ej. condiciones de pago, plazos, garantía).</span>
         <textarea class="field-input" id="notes" rows="3" placeholder="Ej. Forma de pago: 50% al aceptar el presupuesto, 50% al finalizar el trámite. Plazo estimado de entrega: 7 días laborables."></textarea>
       </div>
@@ -1534,7 +1533,7 @@ footer {
             </section>
 
             <section class="preview-section" id="pv-notes-section" style="display:none;">
-              <div class="preview-section-title">Notas</div>
+              <div class="preview-section-title">Notas u observaciones</div>
               <div class="preview-notes" id="pv-notes-content"></div>
             </section>
 
@@ -1551,7 +1550,10 @@ footer {
       </div>
 
       <div class="actions">
-        <button class="btn btn-ghost" data-back type="button">← Atrás</button>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn btn-ghost" data-back type="button">← Atrás</button>
+          <button class="btn btn-ghost" id="btnNewTramite" type="button">+ Nuevo trámite</button>
+        </div>
         <button class="btn btn-accent" id="btnPrint" type="button">⤓ Guardar como PDF</button>
       </div>
     </div>
@@ -1598,6 +1600,7 @@ const state = {
   quoteRef: '',
   quoteValid: '',
   notes: '',
+  includeNotes: false,
   viewMode: 'detailed',
   showSuplidosToClient: true,
 };
@@ -2105,6 +2108,8 @@ function initFinalStep() {
   document.getElementById('quoteRef').value = state.quoteRef;
   document.getElementById('quoteValid').value = state.quoteValid;
   document.getElementById('notes').value = state.notes;
+  document.getElementById('includeNotes').checked = state.includeNotes;
+  document.getElementById('notesSection').dataset.collapsed = !state.includeNotes;
   // Document type radios + dynamic labels
   const dt = state.docType || 'quote';
   document.querySelectorAll('input[name="docType"]').forEach(r => { r.checked = (r.value === dt); });
@@ -2124,6 +2129,12 @@ function initFinalStep() {
 
 document.getElementById('applyLearning').addEventListener('change', e => {
   state.applyLearning = e.target.checked;
+  compute();
+});
+
+document.getElementById('includeNotes').addEventListener('change', e => {
+  state.includeNotes = e.target.checked;
+  document.getElementById('notesSection').dataset.collapsed = !state.includeNotes;
   compute();
 });
 document.getElementById('applyVat').addEventListener('change', e => {
@@ -2598,9 +2609,9 @@ function compute() {
     clientSection.style.display = 'none';
   }
 
-  // Notes section
+  // Notes section: only shown if include is on and there's actual content
   const notesSection = document.getElementById('pv-notes-section');
-  if (state.notes && state.notes.trim()) {
+  if (state.includeNotes && state.notes && state.notes.trim()) {
     notesSection.style.display = '';
     document.getElementById('pv-notes-content').textContent = state.notes.trim();
   } else {
@@ -2900,6 +2911,40 @@ function compute() {
     document.getElementById('pv-profit-value').textContent = (profit >= 0 ? '+ ' : '− ') + fmt(Math.abs(profit));
   }
 }
+
+function resetForNewTramite() {
+  if (!confirm('¿Crear un trámite nuevo? Se borrarán los datos del trámite actual, del cliente y las notas. Tus datos como emisor y tu salario se mantienen.')) {
+    return;
+  }
+  // Reset trámite-related fields (uses applyTemplate('') for processes/costs/addons/discounts)
+  applyTemplate('');
+  state.mode = '';
+  state.quantity = 1;
+  state.applyLearning = true;
+  state.includeExtraTaxes = false;
+  state.extraTaxes = [{ name: '', rate: '' }];
+  state.includeRetentions = false;
+  state.retentions = [{ name: '', rate: '' }];
+  state.client = { name: '', nif: '', street: '', number: '', postal: '', city: '', province: '' };
+  state.isQuote = false;
+  state.docType = 'quote';
+  state.quoteRef = '';
+  state.quoteValid = '';
+  state.notes = '';
+  state.includeNotes = false;
+  state.viewMode = 'detailed';
+  state.showSuplidosToClient = true;
+  // Keep: state.issuer, state.annualSalary, state.annualHours
+  // Reset progress to step 0
+  state.visited = [true, false, false, false];
+  go(0);
+  // Clear mode card selection
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  const btn0 = document.getElementById('btn-next-0');
+  if (btn0) btn0.disabled = true;
+  showToast('Nuevo trámite — listo para empezar');
+}
+document.getElementById('btnNewTramite').addEventListener('click', resetForNewTramite);
 
 document.getElementById('btnPrint').addEventListener('click', () => {
   const previewEl = document.getElementById('preview');
