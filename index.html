@@ -1,0 +1,2648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F5F7FA">
+<title>Calculadora de Costes · Arquitectura Jurídica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,30..100;1,9..144,300..900,30..100&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F7FA;
+  --paper: #FFFFFF;
+  --ink: #0F2A47;
+  --ink-soft: #2C4A6B;
+  --muted: #6B7C8E;
+  --line: #D3DCE6;
+  --line-soft: #E8EEF4;
+  --accent: #1E5DA8;
+  --accent-soft: rgba(30,93,168,0.08);
+  --warm: #4A90D9;
+  --warm-soft: #DCEAF7;
+  --error: #C44545;
+  --radius: 4px;
+  --shadow-sm: 0 1px 2px rgba(15,42,71,0.04), 0 1px 1px rgba(15,42,71,0.02);
+  --shadow: 0 4px 16px rgba(15,42,71,0.06), 0 1px 2px rgba(15,42,71,0.04);
+  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  background-image:
+    radial-gradient(circle at 15% 8%, rgba(74,144,217,0.06) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(30,93,168,0.05) 0%, transparent 45%);
+  background-attachment: fixed;
+  min-height: 100vh; min-height: 100dvh;
+}
+input, button, select, textarea { font-family: inherit; -webkit-appearance: none; appearance: none; }
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+button { background: none; border: none; cursor: pointer; color: inherit; }
+
+.container {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: clamp(20px, 5vw, 48px) clamp(16px, 4vw, 24px) 96px;
+}
+
+/* ============ HEADER ============ */
+.header { margin-bottom: 36px; }
+.brand { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+.brand-mark { width: 38px; height: 38px; flex-shrink: 0; color: var(--ink); }
+.brand-mark svg { display: block; width: 100%; height: 100%; }
+.brand-text { display: flex; flex-direction: column; gap: 2px; }
+.brand-name {
+  font-family: var(--serif); font-style: italic;
+  font-size: 18px; font-weight: 500;
+  letter-spacing: -0.015em; color: var(--ink);
+  line-height: 1.05; font-variation-settings: "SOFT" 50;
+}
+.brand-tag {
+  font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+}
+h1 {
+  font-family: var(--serif); font-weight: 350;
+  font-size: clamp(32px, 6vw, 56px); line-height: 1.02;
+  letter-spacing: -0.025em;
+  font-variation-settings: "SOFT" 50, "opsz" 144;
+  margin-bottom: 16px;
+}
+h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
+.subtitle {
+  color: var(--ink-soft);
+  font-size: clamp(14px, 2.5vw, 16px);
+  max-width: 580px; line-height: 1.55;
+}
+
+/* ============ STEPS ============ */
+.steps {
+  display: flex; align-items: center; gap: 6px;
+  margin: 32px 0; flex-wrap: wrap;
+}
+.step-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px 6px 8px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--paper);
+  font-size: 12px; font-weight: 500;
+  color: var(--muted);
+  transition: all 0.2s ease;
+  letter-spacing: -0.005em; cursor: pointer;
+}
+.step-pill:hover { border-color: var(--ink-soft); color: var(--ink-soft); }
+.step-pill.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.step-pill.active:hover { color: var(--bg); }
+.step-pill.done { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.step-pill.done:hover { color: var(--bg); }
+.step-num {
+  width: 18px; height: 18px;
+  display: grid; place-items: center;
+  font-size: 10px; font-family: var(--mono);
+  background: rgba(255,255,255,0.15); border-radius: 50%;
+}
+.step-pill:not(.active):not(.done) .step-num { background: var(--bg); color: var(--muted); }
+.step-divider { flex: 0 0 12px; height: 1px; background: var(--line); }
+@media (max-width: 480px) {
+  .step-pill { padding: 6px 10px 6px 6px; font-size: 11px; gap: 6px; }
+  .step-divider { flex: 0 0 6px; }
+}
+
+/* ============ PANEL ============ */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(20px, 4vw, 40px);
+  box-shadow: var(--shadow-sm);
+}
+.panel-header {
+  margin-bottom: 32px; padding-bottom: 24px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.panel-eyebrow {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--warm); margin-bottom: 12px;
+}
+.panel-title {
+  font-family: var(--serif); font-weight: 400;
+  font-size: clamp(24px, 4.5vw, 34px);
+  line-height: 1.1; letter-spacing: -0.015em;
+  font-variation-settings: "SOFT" 50, "opsz" 60;
+}
+.panel-desc {
+  color: var(--ink-soft); margin-top: 10px;
+  font-size: clamp(13px, 2.5vw, 15px);
+  max-width: 580px; line-height: 1.55;
+}
+
+/* ============ MODE ============ */
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 600px) { .mode-grid { grid-template-columns: 1fr; } }
+.mode-card {
+  padding: clamp(22px, 4vw, 32px) clamp(18px, 3.5vw, 26px);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer; text-align: left;
+  font: inherit; color: inherit;
+  transition: all 0.2s ease;
+  position: relative; overflow: hidden;
+}
+.mode-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.mode-card:hover { border-color: var(--ink); transform: translateY(-2px); box-shadow: var(--shadow); }
+.mode-card:hover::before { transform: scaleX(1); }
+.mode-card.selected {
+  border-color: var(--accent); background: #fff;
+  box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow);
+}
+.mode-card.selected::before { transform: scaleX(1); }
+.mode-icon {
+  font-family: var(--serif); font-style: italic;
+  font-size: clamp(36px, 6vw, 44px);
+  color: var(--accent); margin-bottom: 16px; line-height: 0.9;
+}
+.mode-title {
+  font-family: var(--serif);
+  font-size: clamp(19px, 3vw, 22px);
+  margin-bottom: 8px; font-weight: 500; letter-spacing: -0.01em;
+}
+.mode-text { color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+
+/* ============ FIELDS ============ */
+.field-group { margin-bottom: 22px; }
+.field-label {
+  display: block; font-size: 13px; font-weight: 500;
+  color: var(--ink); margin-bottom: 4px; letter-spacing: -0.005em;
+}
+.field-hint {
+  display: block; font-size: 12px;
+  color: var(--muted); margin-bottom: 8px; line-height: 1.5;
+}
+.field-input {
+  width: 100%; padding: 12px 14px;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-family: var(--sans); font-size: 16px;
+  color: var(--ink); transition: all 0.15s ease;
+}
+.field-input:focus {
+  outline: none; border-color: var(--accent);
+  background: #fff; box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.field-input::placeholder { color: var(--muted); }
+.field-input[type="number"] { font-family: var(--mono); font-size: 15px; letter-spacing: 0.01em; }
+.field-input:disabled { opacity: 0.5; cursor: not-allowed; }
+.input-with-suffix { position: relative; }
+.input-with-suffix .field-input { padding-right: 56px; }
+.input-suffix {
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--mono); font-size: 12px;
+  color: var(--muted); pointer-events: none; font-weight: 500;
+}
+.field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 540px) { .field-grid-2 { grid-template-columns: 1fr; } }
+
+/* ============ ROW ============ */
+.row-grid {
+  display: grid; grid-template-columns: 1fr 130px 36px;
+  gap: 8px; margin-bottom: 8px; align-items: center;
+}
+@media (max-width: 480px) {
+  .row-grid { grid-template-columns: 1fr 100px 32px; gap: 6px; }
+}
+.row-grid .field-input { padding: 10px 12px; font-size: 15px; }
+.row-grid .input-with-suffix .field-input { padding-right: 38px; }
+.row-grid .input-suffix { font-size: 11px; right: 10px; }
+
+.btn-icon {
+  width: 36px; height: 40px;
+  border: 1px solid var(--line);
+  background: var(--bg); border-radius: var(--radius);
+  display: grid; place-items: center;
+  color: var(--muted); font-size: 18px; line-height: 1;
+  transition: all 0.15s ease;
+}
+@media (max-width: 480px) { .btn-icon { width: 32px; } }
+.btn-icon:hover, .btn-icon:focus {
+  background: #fff; border-color: var(--error);
+  color: var(--error); outline: none;
+}
+
+.btn-add {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  padding: 10px 14px;
+  color: var(--ink-soft); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s ease;
+  margin-top: 12px;
+}
+.btn-add:hover {
+  border-color: var(--accent); color: var(--accent);
+  border-style: solid; background: var(--accent-soft);
+}
+
+/* ============ SWITCH ============ */
+.switch {
+  display: inline-flex; align-items: center; gap: 10px;
+  cursor: pointer; user-select: none;
+  font-size: 12px; font-weight: 500;
+  color: var(--ink-soft); font-family: var(--mono);
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+.switch-track {
+  width: 36px; height: 20px;
+  background: var(--line); border-radius: 999px;
+  position: relative; transition: background 0.2s; flex-shrink: 0;
+}
+.switch-track::after {
+  content: ''; position: absolute;
+  width: 16px; height: 16px;
+  border-radius: 50%; background: #fff;
+  top: 2px; left: 2px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.switch input:checked + .switch-track { background: var(--accent); }
+.switch input:checked + .switch-track::after { transform: translateX(16px); }
+.switch input:focus-visible + .switch-track { box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* checkbox */
+.check-row {
+  display: inline-flex; align-items: center; gap: 10px;
+  cursor: pointer; user-select: none;
+  font-size: 14px; color: var(--ink); margin-bottom: 12px;
+}
+.check-row input { position: absolute; opacity: 0; }
+.check-box {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--line); border-radius: 3px;
+  background: var(--bg);
+  display: grid; place-items: center;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.check-box::after {
+  content: ''; width: 10px; height: 10px;
+  background: var(--accent); border-radius: 1px;
+  transform: scale(0); transition: transform 0.15s;
+}
+.check-row input:checked + .check-box { border-color: var(--accent); }
+.check-row input:checked + .check-box::after { transform: scale(1); }
+.check-row input:focus-visible + .check-box { box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* ============ SECTION DIVIDER ============ */
+.section-divider {
+  margin: 32px 0 18px;
+  display: flex; align-items: center; gap: 14px;
+  flex-wrap: wrap;
+}
+.section-divider-line { flex: 1; height: 1px; background: var(--line); min-width: 20px; }
+.section-title {
+  font-family: var(--serif); font-size: 19px;
+  font-style: italic; color: var(--ink);
+  font-weight: 400; letter-spacing: -0.01em;
+}
+.section-content[data-collapsed="true"] {
+  opacity: 0.35; pointer-events: none;
+  filter: grayscale(0.5);
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+/* ============ SUMMARY ============ */
+.summary {
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 18px 22px; margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 18px 22px;
+}
+.summary-stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.summary-label {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); font-weight: 500;
+}
+.summary-value {
+  font-family: var(--serif);
+  font-size: clamp(20px, 3.5vw, 24px);
+  font-weight: 400;
+  font-variation-settings: "opsz" 40;
+  letter-spacing: -0.015em; line-height: 1.1;
+  word-break: break-word;
+}
+.summary-value.accent { color: var(--accent); }
+.summary-value.muted { color: var(--muted); }
+
+/* ============ NOTE ============ */
+.note {
+  display: flex; gap: 12px;
+  padding: 14px 18px;
+  background: var(--warm-soft);
+  border-left: 2px solid var(--warm);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 13px; color: var(--ink-soft);
+  margin-top: 20px; line-height: 1.55;
+}
+.note-mark {
+  font-family: var(--serif); font-style: italic;
+  color: var(--warm); font-weight: 600;
+  font-size: 16px; flex-shrink: 0;
+}
+
+/* ============ BUTTONS ============ */
+.actions {
+  display: flex; justify-content: space-between;
+  align-items: center; gap: 12px;
+  margin-top: 36px; padding-top: 24px;
+  border-top: 1px solid var(--line-soft);
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 22px;
+  border: 1px solid var(--ink); background: var(--ink);
+  color: var(--bg); border-radius: var(--radius);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: -0.005em; white-space: nowrap;
+}
+.btn:hover { background: #000; transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover { background: var(--bg); border-color: var(--ink); }
+.btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-accent:hover { background: #1f3a2c; border-color: #1f3a2c; }
+
+/* ============ RESULT HERO ============ */
+.result-hero {
+  text-align: center; padding: 36px 0 28px;
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 4px;
+}
+.result-eyebrow {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--warm); margin-bottom: 12px;
+}
+.result-figure {
+  font-family: var(--serif);
+  font-size: clamp(44px, 10vw, 84px);
+  line-height: 0.95;
+  font-variation-settings: "opsz" 144;
+  font-weight: 300; color: var(--accent);
+  letter-spacing: -0.03em; word-break: break-word;
+}
+.result-figure-sub {
+  font-family: var(--serif); font-style: italic;
+  color: var(--ink-soft); margin-top: 12px;
+  font-size: clamp(14px, 2.8vw, 17px);
+}
+.result-empty {
+  text-align: center; padding: 40px 24px;
+  color: var(--muted); font-size: 14px;
+  font-style: italic; font-family: var(--serif);
+}
+
+/* ============ STEP VISIBILITY ============ */
+.step-content { display: none; }
+.step-content.active { display: block; animation: fadeIn 0.35s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ PREVIEW (printable) ============ */
+.preview-wrap {
+  margin-top: 36px; padding-top: 24px;
+  border-top: 1px solid var(--line-soft);
+}
+.preview-label {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 16px; display: block;
+}
+.preview {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(24px, 4.5vw, 44px);
+  font-size: 13px; color: var(--ink); position: relative;
+}
+.preview-header {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid var(--ink);
+  margin-bottom: 28px; flex-wrap: wrap;
+}
+.preview-brand { display: flex; align-items: center; gap: 12px; }
+.preview-brand-mark { width: 32px; height: 32px; color: var(--ink); flex-shrink: 0; }
+.preview-brand-mark svg { display: block; width: 100%; height: 100%; }
+.preview-brand-text { display: flex; flex-direction: column; gap: 2px; }
+.preview-brand-name {
+  font-family: var(--serif); font-style: italic;
+  font-size: 17px; font-weight: 500;
+  letter-spacing: -0.01em; line-height: 1.05;
+  font-variation-settings: "SOFT" 50;
+}
+.preview-brand-tag {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+}
+.preview-meta {
+  text-align: right; font-family: var(--mono);
+  font-size: 10.5px; color: var(--muted);
+  letter-spacing: 0.04em; line-height: 1.7;
+}
+.preview-meta strong { color: var(--ink); font-weight: 500; }
+@media (max-width: 480px) { .preview-meta { text-align: left; width: 100%; } }
+
+.preview-issuer {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  line-height: 1.65;
+  max-width: 230px;
+}
+.preview-issuer .issuer-name {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  margin-bottom: 8px;
+  font-variation-settings: "SOFT" 80, "opsz" 60;
+}
+.preview-issuer .issuer-line { display: block; word-break: break-word; }
+.preview-issuer .issuer-line.nif { color: var(--ink-soft); font-weight: 500; }
+@media (max-width: 480px) {
+  .preview-issuer { text-align: left; max-width: 100%; width: 100%; }
+}
+
+/* ============ SUBSECTION TITLE ============ */
+.subsection-title {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--warm);
+  font-weight: 600;
+  margin-bottom: 14px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+/* ============ DOCTYPE RADIOS ============ */
+.doctype-radios {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.doctype-radios-3 { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 600px) {
+  .doctype-radios-3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) { .doctype-radios { grid-template-columns: 1fr; } }
+.doctype-option { cursor: pointer; }
+.doctype-option input { position: absolute; opacity: 0; pointer-events: none; }
+.doctype-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  transition: all 0.15s ease;
+}
+.doctype-card:hover { border-color: var(--ink-soft); }
+.doctype-option input:checked ~ .doctype-card {
+  border-color: var(--accent);
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.doctype-option input:focus-visible ~ .doctype-card {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.doctype-title {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.doctype-desc {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* ============ ADDRESS GRIDS ============ */
+.address-grid-row1 {
+  display: grid;
+  grid-template-columns: 1fr 130px;
+  gap: 14px;
+}
+.address-grid-row2 {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 540px) {
+  .address-grid-row1, .address-grid-row2 { grid-template-columns: 1fr; gap: 0; }
+}
+
+textarea.field-input {
+  font-family: var(--sans);
+  font-size: 14px;
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.55;
+}
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 4px 24px rgba(15,42,71,0.18);
+  z-index: 1000;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============ PREVIEW CLIENT BLOCK ============ */
+.preview-client-info { font-size: 13px; }
+.preview-client-name {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  margin-bottom: 8px;
+  font-variation-settings: "SOFT" 80, "opsz" 60;
+}
+.preview-client-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  letter-spacing: 0.02em;
+}
+.preview-client-meta span:empty { display: none; }
+
+.preview-notes {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  font-style: italic;
+  font-family: var(--serif);
+  padding: 4px 0;
+  font-variation-settings: "SOFT" 30;
+}
+
+.preview-doctitle {
+  font-family: var(--serif); font-style: italic;
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 400; letter-spacing: -0.015em;
+  margin-bottom: 4px;
+  font-variation-settings: "SOFT" 50, "opsz" 60;
+}
+.preview-doctitle .product { color: var(--accent); }
+.preview-docsubtitle {
+  font-size: 12px; color: var(--muted);
+  font-family: var(--mono); letter-spacing: 0.06em;
+  margin-bottom: 28px;
+}
+
+.preview-section { margin-bottom: 24px; page-break-inside: avoid; }
+.preview-section-title {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--warm); font-weight: 600;
+  margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.preview-list { font-size: 13px; }
+.preview-list-row {
+  display: flex; justify-content: space-between;
+  padding: 6px 0; gap: 12px;
+}
+.preview-list-row .lbl { color: var(--ink-soft); flex: 1; min-width: 0; }
+.preview-list-row .val {
+  font-family: var(--mono); font-size: 12px;
+  color: var(--ink); white-space: nowrap; font-weight: 500;
+}
+.preview-list-row.subtotal {
+  border-top: 1px solid var(--line-soft);
+  margin-top: 4px; padding-top: 8px; font-weight: 600;
+}
+.preview-list-row.subtotal .lbl {
+  font-family: var(--serif); font-style: italic;
+  color: var(--ink); font-weight: 400; font-size: 13px;
+}
+.preview-list-row.subtotal .val { color: var(--accent); font-weight: 600; }
+.preview-empty {
+  font-size: 12px; color: var(--muted);
+  font-style: italic; font-family: var(--serif); padding: 4px 0;
+}
+
+.preview-final {
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px; margin-top: 28px;
+  page-break-inside: avoid;
+}
+.preview-final-row {
+  display: flex; justify-content: space-between;
+  padding: 7px 0; font-size: 13px; gap: 12px;
+}
+.preview-final-row .lbl { color: var(--ink-soft); flex: 1; }
+.preview-final-row .val {
+  font-family: var(--mono); color: var(--ink);
+  white-space: nowrap; font-weight: 500;
+}
+.preview-final-row.subtotal { border-top: 1px solid var(--line-soft); margin-top: 4px; padding-top: 10px; }
+.preview-final-row.subtotal .lbl { font-family: var(--serif); font-style: italic; color: var(--ink); font-size: 13px; }
+.preview-final-row.subtotal .val { color: var(--accent); font-weight: 600; }
+.preview-final-row.total {
+  border-top: 1.5px solid var(--ink);
+  margin-top: 8px; padding-top: 14px;
+}
+.preview-final-row.total .lbl {
+  font-family: var(--serif); font-style: italic;
+  font-size: 17px; color: var(--ink);
+}
+.preview-final-row.total .val {
+  font-family: var(--serif); font-size: 19px;
+  font-weight: 500; color: var(--ink);
+  font-variation-settings: "opsz" 40;
+}
+
+.preview-profit {
+  margin-top: 16px; padding: 18px 20px;
+  background: var(--accent); color: #fff;
+  border-radius: var(--radius);
+  display: flex; justify-content: space-between;
+  align-items: baseline; gap: 12px; flex-wrap: wrap;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.preview-profit-label {
+  font-family: var(--serif); font-style: italic;
+  font-size: 16px; letter-spacing: -0.005em;
+}
+.preview-profit-value {
+  font-family: var(--serif);
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 500;
+  font-variation-settings: "opsz" 40;
+  letter-spacing: -0.01em; white-space: nowrap;
+}
+.preview-profit.loss { background: var(--error); }
+
+.preview-footer {
+  margin-top: 32px; padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+  font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: 0.1em; color: var(--muted);
+  text-align: center; text-transform: uppercase;
+}
+
+footer {
+  margin-top: 32px; text-align: center;
+  font-size: 11px; color: var(--muted);
+  font-family: var(--mono);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+/* ============ PRINT ============ */
+@media print {
+  @page { margin: 1.5cm; size: A4; }
+
+  html, body {
+    background: #fff !important;
+    background-image: none !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+
+  /* Hide top-level chrome */
+  .header, .steps, footer, .toast { display: none !important; }
+
+  /* Hide every step section EXCEPT the active result step */
+  .step-content:not([data-step="3"]) { display: none !important; }
+
+  /* Within the result panel, hide everything EXCEPT the preview-wrap */
+  .step-content[data-step="3"] > .panel > *:not(.preview-wrap) { display: none !important; }
+
+  /* Hide the "Vista previa" label inside preview-wrap */
+  .preview-label { display: none !important; }
+
+  /* Reset spacing/borders on container chain so the preview takes the full page */
+  main, .container,
+  .step-content[data-step="3"],
+  .step-content[data-step="3"] .panel,
+  .preview-wrap {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    max-width: 100% !important;
+    background: #fff !important;
+  }
+
+  .preview {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: #fff !important;
+    max-width: 100% !important;
+  }
+
+  /* Page break helpers */
+  .preview-final, .preview-profit, .preview-section { page-break-inside: avoid; }
+  .preview-profit {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<main class="container">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <rect x="2" y="3.5" width="28" height="2.2" fill="currentColor"/>
+          <rect x="3" y="6.2" width="26" height="0.8" fill="currentColor" opacity="0.55"/>
+          <rect x="5.25" y="9" width="2.5" height="15.5" fill="currentColor"/>
+          <rect x="14.75" y="9" width="2.5" height="15.5" fill="currentColor"/>
+          <rect x="24.25" y="9" width="2.5" height="15.5" fill="currentColor"/>
+          <rect x="3" y="25" width="26" height="0.8" fill="currentColor" opacity="0.55"/>
+          <rect x="2" y="26.3" width="28" height="2.2" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">Arquitectura Jurídica</div>
+      </div>
+    </div>
+    <h1>Calcula el coste real<br>de tus <em>trámites</em>.</h1>
+    <p class="subtitle">Una calculadora flexible para gestorías y profesionales administrativos. Mide el tiempo, los costes fijos, los suplidos y el margen — paso a paso, sin sorpresas.</p>
+  </header>
+
+  <nav class="steps" id="stepIndicator" aria-label="Progreso">
+    <button class="step-pill active" data-step="0" type="button"><span class="step-num">1</span> Modo</button>
+    <div class="step-divider"></div>
+    <button class="step-pill" data-step="1" type="button"><span class="step-num">2</span> Tiempo</button>
+    <div class="step-divider"></div>
+    <button class="step-pill" data-step="2" type="button"><span class="step-num">3</span> Costes</button>
+    <div class="step-divider"></div>
+    <button class="step-pill" data-step="3" type="button"><span class="step-num">4</span> Resultado</button>
+  </nav>
+
+  <!-- STEP 0 — START -->
+  <section class="step-content active" data-step="0">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 01 — Inicio</div>
+        <div class="panel-title">¿Qué trámite quieres calcular?</div>
+        <p class="panel-desc">Pon nombre al trámite y elige cómo trabajar el cálculo. Puedes volver y cambiar de modo en cualquier momento.</p>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="productName">Nombre del trámite</label>
+        <span class="field-hint">Aparecerá en el documento final descargable.</span>
+        <input type="text" class="field-input" id="productName" placeholder="Ej. Constitución de SL">
+      </div>
+
+      <div class="section-divider" style="margin-top: 28px;">
+        <div class="section-title">Modo de cálculo</div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="mode-grid">
+        <button class="mode-card" data-mode="profitability" type="button">
+          <div class="mode-icon">%</div>
+          <div class="mode-title">Calcular margen</div>
+          <div class="mode-text">Pones el precio del servicio y te calculo cuánto ganas y qué porcentaje de margen obtienes.</div>
+        </button>
+        <button class="mode-card" data-mode="target" type="button">
+          <div class="mode-icon">€</div>
+          <div class="mode-title">Margen objetivo</div>
+          <div class="mode-text">Indicas el margen que buscas y te digo a qué precio hay que vender el servicio para conseguirlo.</div>
+        </button>
+      </div>
+      <div class="actions">
+        <span></span>
+        <button class="btn" id="btn-next-0" disabled type="button">Siguiente →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 1 — TIME -->
+  <section class="step-content" data-step="1">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 02 — Tiempo y mano de obra</div>
+        <div class="panel-title">¿Cuánto tiempo lleva el trámite?</div>
+        <p class="panel-desc">Apunta cada subproceso del trámite con su duración en minutos. Lo sumo y lo convierto a horas automáticamente.</p>
+      </div>
+
+      <div id="processList"></div>
+      <button class="btn-add" id="addProcess" type="button">+ Añadir proceso</button>
+
+      <div class="section-divider">
+        <div class="section-title">Salario y jornada</div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="field-grid-2">
+        <div class="field-group" style="margin-bottom: 0;">
+          <label class="field-label" for="annualSalary">Salario bruto anual</label>
+          <span class="field-hint">Salario de referencia para calcular el coste hora.</span>
+          <div class="input-with-suffix">
+            <input type="number" inputmode="decimal" class="field-input" id="annualSalary" placeholder="0" min="0" step="100">
+            <span class="input-suffix">€/año</span>
+          </div>
+        </div>
+        <div class="field-group" style="margin-bottom: 0;">
+          <label class="field-label" for="annualHours">Horas anuales trabajadas</label>
+          <span class="field-hint">1.760 h = jornada completa. Para parcial: media jornada ≈ 880 h.</span>
+          <div class="input-with-suffix">
+            <input type="number" inputmode="numeric" class="field-input" id="annualHours" value="1760" min="1" step="10">
+            <span class="input-suffix">h/año</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="summary-stat">
+          <span class="summary-label">Tiempo total</span>
+          <span class="summary-value muted" id="totalMinutes">0 min</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">En horas</span>
+          <span class="summary-value muted" id="totalHours">0,00 h</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Coste / hora</span>
+          <span class="summary-value muted" id="hourlyRate">— €</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Mano de obra</span>
+          <span class="summary-value accent" id="laborCost">— €</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-ghost" data-back type="button">← Atrás</button>
+        <button class="btn" data-forward type="button">Siguiente →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 — COSTS -->
+  <section class="step-content" data-step="2">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 03 — Costes y suplidos</div>
+        <div class="panel-title">Costes fijos y suplidos</div>
+        <p class="panel-desc">Añade los costes directos del trámite. Si alguna sección no aplica a tu caso, puedes desactivarla con el switch.</p>
+      </div>
+
+      <div class="section-divider" style="margin-top: 0;">
+        <div class="section-title">Costes directos</div>
+        <div class="section-divider-line"></div>
+        <label class="switch">
+          <input type="checkbox" id="includeDirects" checked>
+          <span class="switch-track"></span>
+          <span>Incluir</span>
+        </label>
+      </div>
+      <div class="section-content" id="directsSection">
+        <span class="field-hint" style="display: block; margin-bottom: 12px;">Gastos atribuibles directamente a este trámite: software específico, subcontratación, materiales puntuales.</span>
+        <div id="directsList"></div>
+        <button class="btn-add" id="addDirect" type="button">+ Añadir coste directo</button>
+      </div>
+
+      <div class="section-divider">
+        <div class="section-title">Costes indirectos o compartidos</div>
+        <div class="section-divider-line"></div>
+        <label class="switch">
+          <input type="checkbox" id="includeIndirects" checked>
+          <span class="switch-track"></span>
+          <span>Incluir</span>
+        </label>
+      </div>
+      <div class="section-content" id="indirectsSection">
+        <span class="field-hint" style="display: block; margin-bottom: 12px;">Gastos que <strong>no se multiplican</strong> por la cantidad de trámites:<br>
+        · <strong>Indirectos</strong>: parte proporcional de gastos generales (alquiler, internet, suministros, software general, licencia mensual de IA).<br>
+        · <strong>Compartidos</strong>: costes únicos que se aprovechan en varios trámites del mismo lote (certificado de representación, autorización notarial, licencia anual reutilizada).</span>
+        <div id="indirectsList"></div>
+        <button class="btn-add" id="addIndirect" type="button">+ Añadir coste</button>
+      </div>
+
+      <div class="section-divider">
+        <div class="section-title">Suplidos</div>
+        <div class="section-divider-line"></div>
+        <label class="switch">
+          <input type="checkbox" id="includeSuplidos" checked>
+          <span class="switch-track"></span>
+          <span>Incluir</span>
+        </label>
+      </div>
+      <div class="section-content" id="suplidoSection">
+        <div id="suplidoList"></div>
+        <button class="btn-add" id="addSuplido" type="button">+ Añadir suplido</button>
+      </div>
+
+      <div class="note">
+        <span class="note-mark">i</span>
+        <span><strong>Sobre los suplidos:</strong> son cantidades pagadas en nombre y por cuenta del cliente (tasas, registros, notarios). No están sujetos a IVA y se facturan tal cual. No cuentan como coste — son un reembolso.</span>
+      </div>
+
+      <div class="summary">
+        <div class="summary-stat">
+          <span class="summary-label">Mano de obra</span>
+          <span class="summary-value muted" id="s-labor">— €</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Costes directos</span>
+          <span class="summary-value muted" id="s-directs">0,00 €</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Indirectos / compartidos</span>
+          <span class="summary-value muted" id="s-indirects">0,00 €</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Suplidos</span>
+          <span class="summary-value muted" id="s-suplidos">0,00 €</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Coste interno</span>
+          <span class="summary-value accent" id="s-internal">— €</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-ghost" data-back type="button">← Atrás</button>
+        <button class="btn" data-forward type="button">Siguiente →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 — RESULT -->
+  <section class="step-content" data-step="3">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Paso 04 — Resultado</div>
+        <div class="panel-title" id="finalTitle">Precio y margen</div>
+        <p class="panel-desc" id="finalDesc">Pon el nombre y los datos del servicio para ver el desglose final.</p>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="quantity">Cantidad de servicios</label>
+        <span class="field-hint" id="quantityHint">Número de unidades del trámite. A partir de 10 unidades se aplica una curva de aprendizaje (−5% del tiempo cada 10 uds, máx. −30%) — el resto de costes escalan normalmente.</span>
+        <input type="number" inputmode="numeric" class="field-input" id="quantity" value="1" min="1" step="1">
+
+        <div class="note" id="learningNote" style="margin-top: 14px; display: none;">
+          <span class="note-mark">i</span>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+            <span id="learningNoteText"></span>
+            <label class="switch" style="margin: 0;">
+              <input type="checkbox" id="applyLearning" checked>
+              <span class="switch-track"></span>
+              <span>Aplicar curva de aprendizaje</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" id="priceLabel" for="priceInput">Precio del servicio (sin IVA)</label>
+        <span class="field-hint" id="priceHint">Precio por unidad, antes de IVA.</span>
+        <div class="input-with-suffix">
+          <input type="number" inputmode="decimal" class="field-input" id="priceInput" placeholder="0" min="0" step="1">
+          <span class="input-suffix" id="priceSuffix">€</span>
+        </div>
+      </div>
+
+      <div class="section-divider" style="margin-top: 8px;">
+        <div class="section-title">Descuentos</div>
+        <div class="section-divider-line"></div>
+        <label class="switch">
+          <input type="checkbox" id="includeDiscounts">
+          <span class="switch-track"></span>
+          <span>Incluir</span>
+        </label>
+      </div>
+      <div class="section-content" id="discountsSection" data-collapsed="true">
+        <span class="field-hint" style="display: block; margin-bottom: 12px;">Descuentos sobre el precio del servicio que se aplican <strong>antes del IVA</strong> (ej. fidelización, descuento por volumen, promoción).</span>
+        <div id="discountsList"></div>
+        <button class="btn-add" id="addDiscount" type="button">+ Añadir descuento</button>
+      </div>
+
+      <div class="field-group" style="margin-top: 22px;">
+        <label class="check-row">
+          <input type="checkbox" id="applyVat" checked>
+          <span class="check-box"></span>
+          <span>Aplicar IVA al precio del servicio</span>
+        </label>
+        <div class="input-with-suffix">
+          <input type="number" inputmode="decimal" class="field-input" id="vatInput" value="21" min="0" max="100" step="0.5">
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+
+      <div class="section-divider" style="margin-top: 4px;">
+        <div class="section-title">Otros impuestos</div>
+        <div class="section-divider-line"></div>
+        <label class="switch">
+          <input type="checkbox" id="includeExtraTaxes">
+          <span class="switch-track"></span>
+          <span>Incluir</span>
+        </label>
+      </div>
+      <div class="section-content" id="extraTaxesSection" data-collapsed="true">
+        <span class="field-hint" style="display: block; margin-bottom: 12px;">Recargos o tributos adicionales que se apliquen sobre el precio del servicio. Cada uno con su nombre y porcentaje (ej. recargo de equivalencia).</span>
+        <div id="extraTaxesList"></div>
+        <button class="btn-add" id="addExtraTax" type="button">+ Añadir impuesto</button>
+      </div>
+
+      <div class="section-divider">
+        <div class="section-title">Retenciones</div>
+        <div class="section-divider-line"></div>
+        <label class="switch">
+          <input type="checkbox" id="includeRetentions">
+          <span class="switch-track"></span>
+          <span>Incluir</span>
+        </label>
+      </div>
+      <div class="section-content" id="retentionsSection" data-collapsed="true">
+        <span class="field-hint" style="display: block; margin-bottom: 12px;"><strong>Retenciones que el cliente practica sobre tu factura</strong> y se restan del importe que recibes. Se calculan sobre el precio del servicio (base imponible). Casos típicos:<br>
+        · IRPF profesional <strong>15%</strong> (general) o <strong>7%</strong> (nuevos autónomos los primeros 3 años) — solo si facturas a empresas o autónomos.<br>
+        · Descuento por pronto pago.<br>
+        <em>No confundir con el IRPF de tu nómina: ese ya está incluido en el salario bruto del paso anterior.</em></span>
+        <div id="retentionsList"></div>
+        <button class="btn-add" id="addRetention" type="button">+ Añadir retención</button>
+      </div>
+
+      <div class="section-divider">
+        <div class="section-title">Presupuesto / Factura</div>
+        <div class="section-divider-line"></div>
+        <label class="switch">
+          <input type="checkbox" id="isQuote">
+          <span class="switch-track"></span>
+          <span>Activar</span>
+        </label>
+      </div>
+      <div class="section-content" id="quoteSection" data-collapsed="true">
+        <span class="field-hint" style="display: block; margin-bottom: 16px;">Convierte el documento en un presupuesto o factura. Tus datos van arriba a la derecha y los del cliente debajo del título del trámite.</span>
+
+        <div class="field-group">
+          <label class="field-label">Tipo de documento</label>
+          <div class="doctype-radios">
+            <label class="doctype-option">
+              <input type="radio" name="docType" value="quote" checked>
+              <span class="doctype-card">
+                <span class="doctype-title">Presupuesto</span>
+                <span class="doctype-desc">Oferta con precio y validez</span>
+              </span>
+            </label>
+            <label class="doctype-option">
+              <input type="radio" name="docType" value="invoice">
+              <span class="doctype-card">
+                <span class="doctype-title">Factura</span>
+                <span class="doctype-desc">Documento de cobro</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="note" style="background: #FBE6E6; border-left-color: var(--error);">
+          <span class="note-mark" style="color: var(--error);">!</span>
+          <span><strong>Atención:</strong> esta herramienta <strong>no es un generador oficial de facturas</strong>. El documento producido es un cálculo profesional para uso interno, oferta comercial o referencia. Antes de enviar al cliente, comprueba toda la información y asegúrate de que cumple la normativa fiscal vigente y los requisitos de tu asesoría.</span>
+        </div>
+
+        <div class="subsection-title" style="margin-top: 24px;">Tus datos (emisor)</div>
+
+        <div class="field-group">
+          <label class="field-label" for="issuerName">Nombre o empresa</label>
+          <input type="text" class="field-input" id="issuerName" placeholder="Ej. Despacho Pérez & Asociados">
+        </div>
+
+        <div class="field-grid-2">
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="issuerNif">NIF / CIF</label>
+            <input type="text" class="field-input" id="issuerNif" placeholder="B12345678">
+          </div>
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="issuerPhone">Teléfono</label>
+            <input type="tel" class="field-input" id="issuerPhone" placeholder="+34 600 000 000">
+          </div>
+        </div>
+
+        <div class="address-grid-row1">
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="issuerStreet">Calle / vía</label>
+            <input type="text" class="field-input" id="issuerStreet" placeholder="Calle Mayor">
+          </div>
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="issuerNumber">Número</label>
+            <input type="text" class="field-input" id="issuerNumber" placeholder="12, 3ºB">
+          </div>
+        </div>
+
+        <div class="address-grid-row2">
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="issuerPostal">Código postal</label>
+            <input type="text" class="field-input" id="issuerPostal" placeholder="28001" inputmode="numeric">
+          </div>
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="issuerCity">Municipio</label>
+            <input type="text" class="field-input" id="issuerCity" placeholder="Madrid">
+          </div>
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="issuerProvince">Provincia</label>
+            <input type="text" class="field-input" id="issuerProvince" placeholder="Madrid">
+          </div>
+        </div>
+
+        <div class="field-group" style="margin-bottom: 24px;">
+          <label class="field-label" for="issuerEmail">Correo electrónico</label>
+          <input type="email" class="field-input" id="issuerEmail" placeholder="contacto@dominio.com">
+        </div>
+
+        <div class="subsection-title">Datos del cliente</div>
+
+        <div class="field-group">
+          <label class="field-label" for="clientName">Nombre o empresa del cliente</label>
+          <input type="text" class="field-input" id="clientName" placeholder="Ej. Industrias García SL">
+        </div>
+
+        <div class="field-grid-2">
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="clientNif">NIF / CIF</label>
+            <input type="text" class="field-input" id="clientNif" placeholder="B87654321">
+          </div>
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="quoteRef"><span id="quoteRefLabel">Nº de presupuesto</span></label>
+            <input type="text" class="field-input" id="quoteRef" placeholder="2026-001">
+          </div>
+        </div>
+
+        <div class="address-grid-row1">
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="clientStreet">Calle / vía</label>
+            <input type="text" class="field-input" id="clientStreet" placeholder="Calle Velázquez">
+          </div>
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="clientNumber">Número</label>
+            <input type="text" class="field-input" id="clientNumber" placeholder="48, planta 2">
+          </div>
+        </div>
+
+        <div class="address-grid-row2">
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="clientPostal">Código postal</label>
+            <input type="text" class="field-input" id="clientPostal" placeholder="08001" inputmode="numeric">
+          </div>
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="clientCity">Municipio</label>
+            <input type="text" class="field-input" id="clientCity" placeholder="Barcelona">
+          </div>
+          <div class="field-group" style="margin-bottom: 14px;">
+            <label class="field-label" for="clientProvince">Provincia</label>
+            <input type="text" class="field-input" id="clientProvince" placeholder="Barcelona">
+          </div>
+        </div>
+
+        <div class="field-group" style="margin-bottom: 0;">
+          <label class="field-label" for="quoteValid"><span id="quoteValidLabel">Válido hasta</span></label>
+          <input type="date" class="field-input" id="quoteValid">
+        </div>
+      </div>
+
+      <div class="section-divider">
+        <div class="section-title">Notas u observaciones</div>
+        <div class="section-divider-line"></div>
+      </div>
+      <div class="field-group">
+        <span class="field-hint" style="display: block; margin-bottom: 8px;">Texto libre que aparecerá al final del documento descargable (ej. condiciones de pago, plazos, garantía).</span>
+        <textarea class="field-input" id="notes" rows="3" placeholder="Ej. Forma de pago: 50% al aceptar el presupuesto, 50% al finalizar el trámite. Plazo estimado de entrega: 7 días laborables."></textarea>
+      </div>
+
+      <div class="section-divider">
+        <div class="section-title">Vista del documento</div>
+        <div class="section-divider-line"></div>
+      </div>
+      <span class="field-hint" style="display: block; margin-bottom: 12px;">Elige qué información se incluye en el PDF descargable.</span>
+      <div class="doctype-radios doctype-radios-3">
+        <label class="doctype-option">
+          <input type="radio" name="viewMode" value="detailed" checked>
+          <span class="doctype-card">
+            <span class="doctype-title">Detallado</span>
+            <span class="doctype-desc">Desglose completo: procesos, costes y margen. Uso interno.</span>
+          </span>
+        </label>
+        <label class="doctype-option">
+          <input type="radio" name="viewMode" value="summary">
+          <span class="doctype-card">
+            <span class="doctype-title">Resumen ejecutivo</span>
+            <span class="doctype-desc">Costes agregados + margen. Uso interno o socios.</span>
+          </span>
+        </label>
+        <label class="doctype-option">
+          <input type="radio" name="viewMode" value="client">
+          <span class="doctype-card">
+            <span class="doctype-title">Para cliente</span>
+            <span class="doctype-desc">Solo precio, impuestos y suplidos. Sin costes ni margen.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="field-group" id="clientOptions" style="display: none; margin-top: 16px; margin-bottom: 0;">
+        <label class="check-row" style="margin-bottom: 0;">
+          <input type="checkbox" id="showSuplidosToClient" checked>
+          <span class="check-box"></span>
+          <span>Mostrar suplidos al cliente</span>
+        </label>
+      </div>
+
+      <div id="resultEmpty" class="result-empty">Introduce el precio (o el margen objetivo) para ver el desglose.</div>
+
+      <div id="resultBox" style="display:none">
+        <div class="result-hero">
+          <div class="result-eyebrow" id="heroEyebrow">Margen obtenido</div>
+          <div class="result-figure" id="heroFigure">—</div>
+          <div class="result-figure-sub" id="heroSub">—</div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="preview-wrap">
+          <span class="preview-label">↓ Vista previa · descargable como PDF</span>
+          <article class="preview" id="preview">
+            <header class="preview-header">
+              <div class="preview-brand">
+                <div class="preview-brand-mark" aria-hidden="true">
+                  <svg viewBox="0 0 32 32" fill="none">
+                    <rect x="2" y="3.5" width="28" height="2.2" fill="currentColor"/>
+                    <rect x="3" y="6.2" width="26" height="0.8" fill="currentColor" opacity="0.55"/>
+                    <rect x="5.25" y="9" width="2.5" height="15.5" fill="currentColor"/>
+                    <rect x="14.75" y="9" width="2.5" height="15.5" fill="currentColor"/>
+                    <rect x="24.25" y="9" width="2.5" height="15.5" fill="currentColor"/>
+                    <rect x="3" y="25" width="26" height="0.8" fill="currentColor" opacity="0.55"/>
+                    <rect x="2" y="26.3" width="28" height="2.2" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="preview-brand-text">
+                  <div class="preview-brand-name">Arquitectura Jurídica</div>
+                  <div class="preview-brand-tag" id="pv-tag">Cálculo de costes</div>
+                </div>
+              </div>
+              <div class="preview-meta" id="pv-meta-default">
+                <div><strong>Fecha</strong> · <span id="pv-date">—</span></div>
+                <div><strong>Modo</strong> · <span id="pv-mode">—</span></div>
+              </div>
+              <div class="preview-issuer" id="pv-meta-quote" style="display: none;">
+                <div class="issuer-name" id="pv-issuer-name"></div>
+                <span class="issuer-line nif" id="pv-issuer-nif"></span>
+                <span class="issuer-line" id="pv-issuer-addr1"></span>
+                <span class="issuer-line" id="pv-issuer-addr2"></span>
+                <span class="issuer-line" id="pv-issuer-phone"></span>
+                <span class="issuer-line" id="pv-issuer-email"></span>
+              </div>
+            </header>
+
+            <h2 class="preview-doctitle"><span class="product" id="pv-product">—</span></h2>
+            <div class="preview-docsubtitle" id="pv-subtitle">—</div>
+
+            <section class="preview-section" id="pv-client-section" style="display:none;">
+              <div class="preview-section-title">Cliente</div>
+              <div class="preview-client-info">
+                <div class="preview-client-name" id="pv-client-name">—</div>
+                <div class="preview-client-meta">
+                  <span id="pv-client-nif"></span>
+                  <span id="pv-client-addr1"></span>
+                  <span id="pv-client-addr2"></span>
+                </div>
+              </div>
+            </section>
+
+            <section class="preview-section">
+              <div class="preview-section-title">Procesos del trámite</div>
+              <div class="preview-list" id="pv-processes"></div>
+            </section>
+
+            <section class="preview-section">
+              <div class="preview-section-title">Mano de obra</div>
+              <div class="preview-list" id="pv-labor"></div>
+            </section>
+
+            <section class="preview-section" id="pv-directs-section">
+              <div class="preview-section-title">Costes directos</div>
+              <div class="preview-list" id="pv-directs"></div>
+            </section>
+
+            <section class="preview-section" id="pv-indirects-section">
+              <div class="preview-section-title">Costes indirectos o compartidos</div>
+              <div class="preview-list" id="pv-indirects"></div>
+            </section>
+
+            <section class="preview-section" id="pv-suplidos-section">
+              <div class="preview-section-title">Suplidos</div>
+              <div class="preview-list" id="pv-suplidos"></div>
+            </section>
+
+            <section class="preview-section">
+              <div class="preview-section-title">Detalle</div>
+              <div class="preview-final" id="pv-final"></div>
+              <div class="preview-profit" id="pv-profit">
+                <div class="preview-profit-label" id="pv-profit-label">Beneficio</div>
+                <div class="preview-profit-value" id="pv-profit-value">—</div>
+              </div>
+            </section>
+
+            <section class="preview-section" id="pv-notes-section" style="display:none;">
+              <div class="preview-section-title">Notas</div>
+              <div class="preview-notes" id="pv-notes-content"></div>
+            </section>
+
+            <footer class="preview-footer" id="pv-footer">
+              Documento generado por la Calculadora de Costes · Arquitectura Jurídica
+            </footer>
+          </article>
+        </div>
+      </div>
+
+      <div class="note" style="margin-top: 20px;">
+        <span class="note-mark">i</span>
+        <span>Al pulsar el botón se abre el diálogo de impresión del navegador. En <strong>Destino</strong> elige <em>Guardar como PDF</em> (o <em>Microsoft Print to PDF</em>) y pulsa Guardar.</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-ghost" data-back type="button">← Atrás</button>
+        <button class="btn btn-accent" id="btnPrint" type="button">⤓ Guardar como PDF</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>Arquitectura Jurídica · Calculadora de costes v2.0</footer>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const state = {
+  step: 0,
+  visited: new Set([0]),
+  mode: null,
+  processes: [{ name: '', minutes: '' }],
+  annualSalary: '',
+  annualHours: 1760,
+  includeDirects: true,
+  directs: [{ name: '', price: '' }],
+  includeIndirects: true,
+  indirects: [{ name: '', price: '' }],
+  includeSuplidos: true,
+  suplidos: [{ name: '', price: '' }],
+  productName: '',
+  quantity: 1,
+  applyLearning: true,
+  serviceInput: '',
+  applyVat: true,
+  vat: 21,
+  includeDiscounts: false,
+  discounts: [{ name: '', rate: '' }],
+  includeExtraTaxes: false,
+  extraTaxes: [{ name: '', rate: '' }],
+  includeRetentions: false,
+  retentions: [{ name: '', rate: '' }],
+  isQuote: false,
+  docType: 'quote',
+  issuer: { name: '', nif: '', street: '', number: '', postal: '', city: '', province: '', phone: '', email: '' },
+  client: { name: '', nif: '', street: '', number: '', postal: '', city: '', province: '' },
+  quoteRef: '',
+  quoteValid: '',
+  notes: '',
+  viewMode: 'detailed',
+  showSuplidosToClient: true,
+};
+
+const fmt = (n) => isFinite(n) ? new Intl.NumberFormat('es-ES', {
+  style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2
+}).format(n) : '— €';
+const fmtPct = (n) => isFinite(n) ? new Intl.NumberFormat('es-ES', {
+  minimumFractionDigits: 1, maximumFractionDigits: 2
+}).format(n) + ' %' : '—';
+const fmtHours = (n) => isFinite(n) ? n.toFixed(2).replace('.', ',') + ' h' : '— h';
+const fmtMin = (n) => Math.round(n).toLocaleString('es-ES') + ' min';
+const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const esc = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ============ TOAST ============
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('visible');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('visible'), 2400);
+}
+
+// Sanitize a string for use in a filename
+const slugify = (s) => (s || 'tramite').trim()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase().slice(0, 60) || 'tramite';
+
+function calcLabor() {
+  const totalMin = state.processes.reduce((s, p) => s + num(p.minutes), 0);
+  const hours = totalMin / 60;
+  const salary = num(state.annualSalary);
+  const annualHours = num(state.annualHours) || 1760;
+  const hourly = salary > 0 && annualHours > 0 ? salary / annualHours : 0;
+  const cost = hours * hourly;
+  return { totalMin, hours, hourly, cost, annualHours };
+}
+function calcCosts() {
+  const directs = state.includeDirects ? state.directs.reduce((s, x) => s + num(x.price), 0) : 0;
+  const indirects = state.includeIndirects ? state.indirects.reduce((s, x) => s + num(x.price), 0) : 0;
+  const suplidos = state.includeSuplidos ? state.suplidos.reduce((s, x) => s + num(x.price), 0) : 0;
+  return { directs, indirects, fixed: directs + indirects, suplidos };
+}
+
+function go(step) {
+  if (step < 0 || step > 3) return;
+  state.step = step;
+  state.visited.add(step);
+  document.querySelectorAll('.step-content').forEach(el => {
+    el.classList.toggle('active', +el.dataset.step === step);
+  });
+  document.querySelectorAll('#stepIndicator .step-pill').forEach(el => {
+    const s = +el.dataset.step;
+    el.classList.toggle('active', s === step);
+    el.classList.toggle('done', s !== step && state.visited.has(s) && s < step);
+  });
+  if (step === 1) { renderProcesses(); updateLaborSummary(); }
+  if (step === 2) { renderCostsLists(); applySectionToggles(); updateCostsSummary(); }
+  if (step === 3) { initFinalStep(); compute(); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go(state.step - 1)));
+document.querySelectorAll('[data-forward]').forEach(b => b.addEventListener('click', () => go(state.step + 1)));
+document.querySelectorAll('#stepIndicator .step-pill').forEach(pill => {
+  pill.addEventListener('click', () => go(+pill.dataset.step));
+});
+
+const modeBtns = document.querySelectorAll('.mode-card');
+const next0 = document.getElementById('btn-next-0');
+modeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    modeBtns.forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.mode = btn.dataset.mode;
+    next0.disabled = false;
+  });
+});
+next0.addEventListener('click', () => go(1));
+
+function renderProcesses() {
+  const list = document.getElementById('processList');
+  list.innerHTML = '';
+  state.processes.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'row-grid';
+    row.innerHTML = `
+      <input class="field-input" type="text" placeholder="Ej. Recopilar documentación" value="${esc(p.name)}" data-i="${i}" data-f="name" aria-label="Nombre del proceso">
+      <div class="input-with-suffix">
+        <input class="field-input" type="number" inputmode="numeric" min="0" step="1" placeholder="0" value="${esc(p.minutes)}" data-i="${i}" data-f="minutes" aria-label="Minutos">
+        <span class="input-suffix">min</span>
+      </div>
+      <button class="btn-icon" data-del="${i}" title="Eliminar fila" aria-label="Eliminar fila" type="button">×</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', e => {
+      const i = +e.target.dataset.i, f = e.target.dataset.f;
+      state.processes[i][f] = e.target.value;
+      updateLaborSummary();
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = +btn.dataset.del;
+      state.processes.splice(i, 1);
+      if (state.processes.length === 0) state.processes.push({ name: '', minutes: '' });
+      renderProcesses(); updateLaborSummary();
+    });
+  });
+  document.getElementById('annualSalary').value = state.annualSalary;
+  document.getElementById('annualHours').value = state.annualHours;
+}
+document.getElementById('addProcess').addEventListener('click', () => {
+  state.processes.push({ name: '', minutes: '' });
+  renderProcesses();
+});
+document.getElementById('annualSalary').addEventListener('input', e => {
+  state.annualSalary = e.target.value;
+  updateLaborSummary();
+});
+document.getElementById('annualHours').addEventListener('input', e => {
+  state.annualHours = e.target.value;
+  updateLaborSummary();
+});
+
+function updateLaborSummary() {
+  const { totalMin, hours, hourly, cost } = calcLabor();
+  const elT = document.getElementById('totalMinutes');
+  const elH = document.getElementById('totalHours');
+  const elR = document.getElementById('hourlyRate');
+  const elC = document.getElementById('laborCost');
+  elT.textContent = fmtMin(totalMin);
+  elH.textContent = fmtHours(hours);
+  elR.textContent = hourly > 0 ? fmt(hourly) : '— €';
+  elC.textContent = cost > 0 ? fmt(cost) : '— €';
+  elT.classList.toggle('muted', totalMin === 0);
+  elH.classList.toggle('muted', totalMin === 0);
+  elR.classList.toggle('muted', hourly === 0);
+  elC.classList.toggle('muted', cost === 0);
+  elC.classList.toggle('accent', cost > 0);
+}
+
+function renderCostsLists() {
+  const lists = [
+    { key: 'directs', el: 'directsList', placeholder: 'Ej. Software específico, subcontratación' },
+    { key: 'indirects', el: 'indirectsList', placeholder: 'Ej. Alquiler, licencia IA, certificado representación' },
+    { key: 'suplidos', el: 'suplidoList', placeholder: 'Ej. Tasa registral' }
+  ];
+  lists.forEach(({ key, el, placeholder }) => {
+    const listEl = document.getElementById(el);
+    listEl.innerHTML = '';
+    state[key].forEach((row, i) => {
+      const r = document.createElement('div');
+      r.className = 'row-grid';
+      r.innerHTML = `
+        <input class="field-input" type="text" placeholder="${placeholder}" value="${esc(row.name)}" data-k="${key}" data-i="${i}" data-f="name" aria-label="Concepto">
+        <div class="input-with-suffix">
+          <input class="field-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${esc(row.price)}" data-k="${key}" data-i="${i}" data-f="price" aria-label="Importe">
+          <span class="input-suffix">€</span>
+        </div>
+        <button class="btn-icon" data-del="${i}" data-k="${key}" title="Eliminar fila" aria-label="Eliminar fila" type="button">×</button>
+      `;
+      listEl.appendChild(r);
+    });
+  });
+  document.querySelectorAll('#directsList input, #indirectsList input, #suplidoList input').forEach(el => {
+    el.addEventListener('input', e => {
+      const { k, i, f } = e.target.dataset;
+      state[k][+i][f] = e.target.value;
+      updateCostsSummary();
+    });
+  });
+  document.querySelectorAll('#directsList [data-del], #indirectsList [data-del], #suplidoList [data-del]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const k = btn.dataset.k, i = +btn.dataset.del;
+      state[k].splice(i, 1);
+      if (state[k].length === 0) state[k].push({ name: '', price: '' });
+      renderCostsLists(); updateCostsSummary();
+    });
+  });
+  document.getElementById('includeDirects').checked = state.includeDirects;
+  document.getElementById('includeIndirects').checked = state.includeIndirects;
+  document.getElementById('includeSuplidos').checked = state.includeSuplidos;
+}
+document.getElementById('addDirect').addEventListener('click', () => {
+  state.directs.push({ name: '', price: '' }); renderCostsLists();
+});
+document.getElementById('addIndirect').addEventListener('click', () => {
+  state.indirects.push({ name: '', price: '' }); renderCostsLists();
+});
+document.getElementById('addSuplido').addEventListener('click', () => {
+  state.suplidos.push({ name: '', price: '' }); renderCostsLists();
+});
+document.getElementById('includeDirects').addEventListener('change', e => {
+  state.includeDirects = e.target.checked;
+  applySectionToggles(); updateCostsSummary();
+});
+document.getElementById('includeIndirects').addEventListener('change', e => {
+  state.includeIndirects = e.target.checked;
+  applySectionToggles(); updateCostsSummary();
+});
+document.getElementById('includeSuplidos').addEventListener('change', e => {
+  state.includeSuplidos = e.target.checked;
+  applySectionToggles(); updateCostsSummary();
+});
+function applySectionToggles() {
+  document.getElementById('directsSection').dataset.collapsed = !state.includeDirects;
+  document.getElementById('indirectsSection').dataset.collapsed = !state.includeIndirects;
+  document.getElementById('suplidoSection').dataset.collapsed = !state.includeSuplidos;
+}
+function updateCostsSummary() {
+  const labor = calcLabor().cost;
+  const c = calcCosts();
+  const internal = labor + c.fixed;
+  const set = (id, val, isZero) => {
+    const el = document.getElementById(id);
+    el.textContent = val;
+    el.classList.toggle('muted', isZero);
+  };
+  set('s-labor', labor > 0 ? fmt(labor) : '— €', labor === 0);
+  set('s-directs', fmt(c.directs), c.directs === 0);
+  set('s-indirects', fmt(c.indirects), c.indirects === 0);
+  set('s-suplidos', fmt(c.suplidos), c.suplidos === 0);
+  document.getElementById('s-internal').textContent = fmt(internal);
+  document.getElementById('s-internal').classList.toggle('muted', internal === 0);
+}
+
+function renderDiscounts() {
+  const list = document.getElementById('discountsList');
+  list.innerHTML = '';
+  state.discounts.forEach((d, i) => {
+    const row = document.createElement('div');
+    row.className = 'row-grid';
+    row.innerHTML = `
+      <input class="field-input" type="text" placeholder="Ej. Fidelización" value="${esc(d.name)}" data-i="${i}" data-f="name" aria-label="Nombre del descuento">
+      <div class="input-with-suffix">
+        <input class="field-input" type="number" inputmode="decimal" min="0" max="100" step="0.5" placeholder="0,00" value="${esc(d.rate)}" data-i="${i}" data-f="rate" aria-label="Porcentaje">
+        <span class="input-suffix">%</span>
+      </div>
+      <button class="btn-icon" data-del="${i}" title="Eliminar fila" aria-label="Eliminar fila" type="button">×</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', e => {
+      const i = +e.target.dataset.i, f = e.target.dataset.f;
+      state.discounts[i][f] = e.target.value;
+      compute();
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = +btn.dataset.del;
+      state.discounts.splice(i, 1);
+      if (state.discounts.length === 0) state.discounts.push({ name: '', rate: '' });
+      renderDiscounts(); compute();
+    });
+  });
+  document.getElementById('includeDiscounts').checked = state.includeDiscounts;
+  document.getElementById('discountsSection').dataset.collapsed = !state.includeDiscounts;
+}
+document.getElementById('addDiscount').addEventListener('click', () => {
+  state.discounts.push({ name: '', rate: '' });
+  renderDiscounts();
+});
+document.getElementById('includeDiscounts').addEventListener('change', e => {
+  state.includeDiscounts = e.target.checked;
+  document.getElementById('discountsSection').dataset.collapsed = !state.includeDiscounts;
+  compute();
+});
+
+document.querySelectorAll('input[name="viewMode"]').forEach(r => {
+  r.addEventListener('change', e => {
+    if (!e.target.checked) return;
+    state.viewMode = e.target.value;
+    document.getElementById('clientOptions').style.display = (state.viewMode === 'client') ? '' : 'none';
+    compute();
+  });
+});
+
+document.getElementById('showSuplidosToClient').addEventListener('change', e => {
+  state.showSuplidosToClient = e.target.checked;
+  compute();
+});
+
+function renderExtraTaxes() {
+  const list = document.getElementById('extraTaxesList');
+  list.innerHTML = '';
+  state.extraTaxes.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'row-grid';
+    row.innerHTML = `
+      <input class="field-input" type="text" placeholder="Ej. Recargo equivalencia" value="${esc(t.name)}" data-i="${i}" data-f="name" aria-label="Nombre del impuesto">
+      <div class="input-with-suffix">
+        <input class="field-input" type="number" inputmode="decimal" min="0" max="100" step="0.5" placeholder="0,00" value="${esc(t.rate)}" data-i="${i}" data-f="rate" aria-label="Porcentaje">
+        <span class="input-suffix">%</span>
+      </div>
+      <button class="btn-icon" data-del="${i}" title="Eliminar fila" aria-label="Eliminar fila" type="button">×</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', e => {
+      const i = +e.target.dataset.i, f = e.target.dataset.f;
+      state.extraTaxes[i][f] = e.target.value;
+      compute();
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = +btn.dataset.del;
+      state.extraTaxes.splice(i, 1);
+      if (state.extraTaxes.length === 0) state.extraTaxes.push({ name: '', rate: '' });
+      renderExtraTaxes(); compute();
+    });
+  });
+  document.getElementById('includeExtraTaxes').checked = state.includeExtraTaxes;
+  document.getElementById('extraTaxesSection').dataset.collapsed = !state.includeExtraTaxes;
+}
+document.getElementById('addExtraTax').addEventListener('click', () => {
+  state.extraTaxes.push({ name: '', rate: '' });
+  renderExtraTaxes();
+});
+document.getElementById('includeExtraTaxes').addEventListener('change', e => {
+  state.includeExtraTaxes = e.target.checked;
+  document.getElementById('extraTaxesSection').dataset.collapsed = !state.includeExtraTaxes;
+  compute();
+});
+
+function renderRetentions() {
+  const list = document.getElementById('retentionsList');
+  list.innerHTML = '';
+  state.retentions.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'row-grid';
+    row.innerHTML = `
+      <input class="field-input" type="text" placeholder="Ej. IRPF" value="${esc(t.name)}" data-i="${i}" data-f="name" aria-label="Nombre de la retención">
+      <div class="input-with-suffix">
+        <input class="field-input" type="number" inputmode="decimal" min="0" max="100" step="0.5" placeholder="0,00" value="${esc(t.rate)}" data-i="${i}" data-f="rate" aria-label="Porcentaje">
+        <span class="input-suffix">%</span>
+      </div>
+      <button class="btn-icon" data-del="${i}" title="Eliminar fila" aria-label="Eliminar fila" type="button">×</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', e => {
+      const i = +e.target.dataset.i, f = e.target.dataset.f;
+      state.retentions[i][f] = e.target.value;
+      compute();
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = +btn.dataset.del;
+      state.retentions.splice(i, 1);
+      if (state.retentions.length === 0) state.retentions.push({ name: '', rate: '' });
+      renderRetentions(); compute();
+    });
+  });
+  document.getElementById('includeRetentions').checked = state.includeRetentions;
+  document.getElementById('retentionsSection').dataset.collapsed = !state.includeRetentions;
+}
+document.getElementById('addRetention').addEventListener('click', () => {
+  state.retentions.push({ name: '', rate: '' });
+  renderRetentions();
+});
+document.getElementById('includeRetentions').addEventListener('change', e => {
+  state.includeRetentions = e.target.checked;
+  document.getElementById('retentionsSection').dataset.collapsed = !state.includeRetentions;
+  compute();
+});
+
+function initFinalStep() {
+  const isProfit = state.mode === 'profitability';
+  document.getElementById('finalTitle').textContent = isProfit
+    ? 'Precio del servicio → margen'
+    : (state.mode === 'target' ? 'Margen objetivo → precio del servicio' : 'Selecciona un modo en el paso 1');
+  document.getElementById('finalDesc').textContent = isProfit
+    ? 'Indica el precio al que vendes el servicio y te calculo el margen sobre tus costes internos.'
+    : 'Indica el porcentaje de margen que quieres obtener y te digo a qué precio vender el servicio.';
+  document.getElementById('priceLabel').textContent = isProfit
+    ? 'Precio del servicio (sin IVA)' : 'Margen objetivo';
+  document.getElementById('priceHint').textContent = isProfit
+    ? 'Lo que cobras al cliente por el servicio, antes de IVA y suplidos.'
+    : 'Porcentaje de beneficio que quieres obtener sobre el precio del servicio.';
+  document.getElementById('priceSuffix').textContent = isProfit ? '€' : '%';
+  const inp = document.getElementById('priceInput');
+  inp.placeholder = isProfit ? '0' : '30';
+  inp.value = state.serviceInput;
+  inp.max = isProfit ? '' : '99';
+  document.getElementById('productName').value = state.productName;
+  document.getElementById('quantity').value = state.quantity || 1;
+  document.getElementById('applyLearning').checked = state.applyLearning !== false;
+  document.getElementById('vatInput').value = state.vat;
+  document.getElementById('vatInput').disabled = !state.applyVat;
+  document.getElementById('applyVat').checked = state.applyVat;
+  renderDiscounts();
+  renderExtraTaxes();
+  renderRetentions();
+  document.querySelectorAll('input[name="viewMode"]').forEach(r => {
+    r.checked = (r.value === (state.viewMode || 'detailed'));
+  });
+  document.getElementById('showSuplidosToClient').checked = state.showSuplidosToClient !== false;
+  document.getElementById('clientOptions').style.display = (state.viewMode === 'client') ? '' : 'none';
+  document.getElementById('isQuote').checked = state.isQuote;
+  document.getElementById('quoteSection').dataset.collapsed = !state.isQuote;
+  document.getElementById('issuerName').value = state.issuer.name;
+  document.getElementById('issuerNif').value = state.issuer.nif;
+  document.getElementById('issuerStreet').value = state.issuer.street;
+  document.getElementById('issuerNumber').value = state.issuer.number;
+  document.getElementById('issuerPostal').value = state.issuer.postal;
+  document.getElementById('issuerCity').value = state.issuer.city;
+  document.getElementById('issuerProvince').value = state.issuer.province;
+  document.getElementById('issuerPhone').value = state.issuer.phone;
+  document.getElementById('issuerEmail').value = state.issuer.email;
+  document.getElementById('clientName').value = state.client.name;
+  document.getElementById('clientNif').value = state.client.nif;
+  document.getElementById('clientStreet').value = state.client.street;
+  document.getElementById('clientNumber').value = state.client.number;
+  document.getElementById('clientPostal').value = state.client.postal;
+  document.getElementById('clientCity').value = state.client.city;
+  document.getElementById('clientProvince').value = state.client.province;
+  document.getElementById('quoteRef').value = state.quoteRef;
+  document.getElementById('quoteValid').value = state.quoteValid;
+  document.getElementById('notes').value = state.notes;
+  // Document type radios + dynamic labels
+  const dt = state.docType || 'quote';
+  document.querySelectorAll('input[name="docType"]').forEach(r => { r.checked = (r.value === dt); });
+  document.getElementById('quoteRefLabel').textContent = dt === 'invoice' ? 'Nº de factura' : 'Nº de presupuesto';
+  document.getElementById('quoteValidLabel').textContent = dt === 'invoice' ? 'Fecha de vencimiento' : 'Válido hasta';
+}
+
+['productName', 'priceInput', 'vatInput', 'quantity'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    if (id === 'productName') state.productName = e.target.value;
+    else if (id === 'priceInput') state.serviceInput = e.target.value;
+    else if (id === 'quantity') state.quantity = e.target.value;
+    else state.vat = e.target.value;
+    compute();
+  });
+});
+
+document.getElementById('applyLearning').addEventListener('change', e => {
+  state.applyLearning = e.target.checked;
+  compute();
+});
+document.getElementById('applyVat').addEventListener('change', e => {
+  state.applyVat = e.target.checked;
+  document.getElementById('vatInput').disabled = !state.applyVat;
+  compute();
+});
+
+document.getElementById('isQuote').addEventListener('change', e => {
+  state.isQuote = e.target.checked;
+  document.getElementById('quoteSection').dataset.collapsed = !state.isQuote;
+  compute();
+});
+['issuerName', 'issuerNif', 'issuerStreet', 'issuerNumber', 'issuerPostal', 'issuerCity', 'issuerProvince', 'issuerPhone', 'issuerEmail'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    const key = id.replace('issuer', '');
+    state.issuer[key.charAt(0).toLowerCase() + key.slice(1)] = e.target.value;
+    compute();
+  });
+});
+
+['clientName', 'clientNif', 'clientStreet', 'clientNumber', 'clientPostal', 'clientCity', 'clientProvince'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    const key = id.replace('client', '');
+    state.client[key.charAt(0).toLowerCase() + key.slice(1)] = e.target.value;
+    compute();
+  });
+});
+['quoteRef', 'quoteValid', 'notes'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    state[id] = e.target.value;
+    compute();
+  });
+});
+
+// Document type radios
+document.querySelectorAll('input[name="docType"]').forEach(r => {
+  r.addEventListener('change', e => {
+    if (!e.target.checked) return;
+    state.docType = e.target.value;
+    // Update labels in the form
+    const isInvoice = state.docType === 'invoice';
+    document.getElementById('quoteRefLabel').textContent = isInvoice ? 'Nº de factura' : 'Nº de presupuesto';
+    document.getElementById('quoteValidLabel').textContent = isInvoice ? 'Fecha de vencimiento' : 'Válido hasta';
+    compute();
+  });
+});
+
+function compute() {
+  if (!state.mode) {
+    document.getElementById('resultBox').style.display = 'none';
+    const empty = document.getElementById('resultEmpty');
+    empty.style.display = 'block';
+    empty.textContent = 'Vuelve al paso 1 y elige un modo de cálculo.';
+    return;
+  }
+  const quantity = Math.max(1, Math.floor(num(state.quantity) || 1));
+  // Learning curve: 5% time reduction per full block of 10 units, capped at 30%
+  const rawLearningDiscount = Math.min(30, Math.floor(quantity / 10) * 5);
+  const learningEnabled = state.applyLearning !== false;
+  const learningDiscount = learningEnabled ? rawLearningDiscount : 0;
+  const learningFactor = 1 - learningDiscount / 100;
+
+  const { cost: laborUnit, totalMin: totalMinUnit, hours: hoursUnit, hourly, annualHours } = calcLabor();
+  const { directs: directsUnit, indirects, fixed: fixedRaw, suplidos: suplidosUnit } = calcCosts();
+
+  // Variable costs scale with quantity. Indirects are overhead — do NOT scale.
+  // Labor scales with quantity AND benefits from the learning curve.
+  const laborGross = laborUnit * quantity;
+  const labor = laborGross * learningFactor;
+  const learningSavings = laborGross - labor;
+  const directs = directsUnit * quantity;
+  const suplidos = suplidosUnit * quantity;
+  const totalMinGross = totalMinUnit * quantity;
+  const totalMin = totalMinGross * learningFactor;
+  const hoursGross = hoursUnit * quantity;
+  const hours = hoursGross * learningFactor;
+  const fixed = directs + indirects;
+  const internal = labor + fixed;
+
+  // Update the dynamic hint under the Quantity field
+  const quantityHint = document.getElementById('quantityHint');
+  if (quantityHint) {
+    if (quantity < 10) {
+      quantityHint.innerHTML = `Número de unidades del trámite. A partir de <strong>10 unidades</strong> se aplica una curva de aprendizaje (−5% del tiempo cada 10 uds, máx. −30%) — el resto de costes escalan normalmente.`;
+    } else {
+      quantityHint.innerHTML = `Número de unidades del trámite. El resto de costes (directos, suplidos) escalan automáticamente con la cantidad.`;
+    }
+  }
+
+  // Show/hide the learning curve notice (visible when quantity >= 10)
+  const learningNote = document.getElementById('learningNote');
+  const learningNoteText = document.getElementById('learningNoteText');
+  if (learningNote && learningNoteText) {
+    if (quantity >= 10) {
+      learningNote.style.display = '';
+      const sign = '−';
+      let baseText;
+      if (rawLearningDiscount < 30) {
+        const next = (Math.floor(quantity / 10) + 1) * 10;
+        baseText = `Se aplica una reducción del <strong>${sign}${rawLearningDiscount}%</strong> sobre el tiempo de mano de obra por curva de aprendizaje. Al llegar a ${next} unidades subirá a ${sign}${rawLearningDiscount + 5}% (tope ${sign}30% en 60+).`;
+      } else {
+        baseText = `Curva de aprendizaje al máximo: <strong>${sign}30%</strong> sobre el tiempo de mano de obra (no sube más a partir de 60 unidades).`;
+      }
+      if (!learningEnabled) {
+        baseText += ' <em>Actualmente desactivada.</em>';
+      }
+      learningNoteText.innerHTML = baseText;
+    } else {
+      learningNote.style.display = 'none';
+    }
+  }
+  const vatRate = state.applyVat ? num(state.vat) / 100 : 0;
+  const v = num(state.serviceInput);
+  const box = document.getElementById('resultBox');
+  const empty = document.getElementById('resultEmpty');
+
+  let valid = false;
+  if (state.mode === 'profitability') valid = v > 0;
+  else valid = v > 0 && v < 100 && internal > 0;
+
+  if (!valid) {
+    box.style.display = 'none';
+    empty.style.display = 'block';
+    empty.textContent = state.mode === 'target' && internal === 0
+      ? 'Para calcular un precio objetivo necesitas tiempo + salario o costes fijos en los pasos anteriores.'
+      : (state.mode === 'target' ? 'Introduce un porcentaje de margen entre 0 y 99.' : 'Introduce el precio del servicio para ver el desglose.');
+    return;
+  }
+  box.style.display = 'block';
+  empty.style.display = 'none';
+
+  // Discounts (applied to the service price BEFORE VAT)
+  const discountsList = state.includeDiscounts
+    ? state.discounts
+        .map(d => ({ name: (d.name || '').trim() || 'Descuento', rate: num(d.rate) }))
+        .filter(d => d.rate > 0)
+    : [];
+  const discountTotalRate = discountsList.reduce((s, d) => s + d.rate, 0) / 100;
+  const discountFactor = Math.max(0, 1 - discountTotalRate);
+
+  // grossPrice = price before discount (what user enters or what we recommend invoicing)
+  // netPrice   = price after discount (what the professional actually receives, the taxable base)
+  // grossPrice / netPrice are TOTALS (unit price × quantity). User enters unit price.
+  let grossPrice, netPrice, profit, profitPct, unitPrice;
+  if (state.mode === 'profitability') {
+    unitPrice = v;
+    grossPrice = unitPrice * quantity;
+    netPrice = grossPrice * discountFactor;
+    profit = netPrice - internal;
+    profitPct = netPrice > 0 ? (profit / netPrice) * 100 : 0;
+  } else {
+    profitPct = v;
+    netPrice = internal / (1 - v / 100);
+    grossPrice = discountFactor > 0 ? netPrice / discountFactor : netPrice;
+    unitPrice = grossPrice / quantity;
+    profit = netPrice - internal;
+  }
+  const discountAmounts = discountsList.map(d => ({ ...d, amount: grossPrice * d.rate / 100 }));
+  const discountTotal = discountAmounts.reduce((s, d) => s + d.amount, 0);
+
+  // VAT, extra taxes and retentions all apply to the NET price (post-discount taxable base)
+  const vatAmount = netPrice * vatRate;
+  const extraTaxesList = state.includeExtraTaxes
+    ? state.extraTaxes
+        .map(t => ({ name: (t.name || '').trim() || 'Impuesto', rate: num(t.rate), amount: netPrice * num(t.rate) / 100 }))
+        .filter(t => t.rate > 0)
+    : [];
+  const extraTaxesTotal = extraTaxesList.reduce((s, t) => s + t.amount, 0);
+  const retentionsListCalc = state.includeRetentions
+    ? state.retentions
+        .map(t => ({ name: (t.name || '').trim() || 'Retención', rate: num(t.rate), amount: netPrice * num(t.rate) / 100 }))
+        .filter(t => t.rate > 0)
+    : [];
+  const retentionsTotal = retentionsListCalc.reduce((s, t) => s + t.amount, 0);
+  const totalBillable = netPrice + vatAmount + extraTaxesTotal + suplidos - retentionsTotal;
+
+  // HERO
+  if (state.mode === 'profitability') {
+    document.getElementById('heroEyebrow').textContent = quantity > 1
+      ? `Margen sobre ${quantity} unidades`
+      : 'Margen sobre el precio';
+    document.getElementById('heroFigure').textContent = fmtPct(profitPct);
+    document.getElementById('heroFigure').style.color = profit >= 0 ? 'var(--accent)' : 'var(--error)';
+    const heroBase = discountTotal > 0 ? `${fmt(netPrice)} (precio neto tras descuento)` : fmt(netPrice);
+    document.getElementById('heroSub').textContent = profit >= 0
+      ? `Beneficio neto de ${fmt(profit)} sobre ${heroBase}${quantity > 1 ? ` · ${fmt(unitPrice)} por unidad` : ''}`
+      : `Pérdida de ${fmt(Math.abs(profit))} — el precio no cubre los costes`;
+  } else {
+    document.getElementById('heroEyebrow').textContent = quantity > 1
+      ? `Precio unitario recomendado (${quantity} unidades)`
+      : 'Precio del servicio recomendado';
+    document.getElementById('heroFigure').textContent = fmt(unitPrice);
+    document.getElementById('heroFigure').style.color = 'var(--accent)';
+    let heroSub;
+    if (quantity > 1) {
+      heroSub = `Total facturado: ${fmt(grossPrice)} · margen del ${fmtPct(profitPct)}`;
+      if (discountTotal > 0) heroSub = `Precio bruto unitario · neto tras descuento: ${fmt(netPrice / quantity)}/ud · margen del ${fmtPct(profitPct)}`;
+    } else {
+      heroSub = discountTotal > 0
+        ? `precio bruto · neto tras descuento: ${fmt(netPrice)} · margen del ${fmtPct(profitPct)}`
+        : `para un margen del ${fmtPct(profitPct)} sobre ${fmt(netPrice)}`;
+    }
+    document.getElementById('heroSub').textContent = heroSub;
+  }
+
+  // PREVIEW
+  const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+  const productLabel = state.productName.trim() || 'Sin nombre';
+  document.getElementById('pv-date').textContent = today;
+  document.getElementById('pv-mode').textContent = state.mode === 'profitability' ? 'Margen' : 'Precio objetivo';
+  document.getElementById('pv-product').textContent = productLabel;
+
+  // Address formatter: returns [line1, line2] from desagregated address
+  const formatAddress = (a) => {
+    const street = (a.street || '').trim();
+    const number = (a.number || '').trim();
+    const postal = (a.postal || '').trim();
+    const city = (a.city || '').trim();
+    const province = (a.province || '').trim();
+    const line1 = [street, number].filter(Boolean).join(', ');
+    const cpCity = [postal, city].filter(Boolean).join(' ');
+    let line2 = cpCity;
+    if (province && city.toLowerCase() !== province.toLowerCase()) {
+      line2 = line2 ? `${line2} (${province})` : province;
+    }
+    return [line1, line2];
+  };
+
+  // Toggle quote vs calculation header
+  const metaDefault = document.getElementById('pv-meta-default');
+  const metaQuote = document.getElementById('pv-meta-quote');
+  const tagEl = document.getElementById('pv-tag');
+  const isInvoice = state.docType === 'invoice';
+  const docLabel = isInvoice ? 'Factura' : 'Presupuesto';
+  if (state.isQuote) {
+    metaDefault.style.display = 'none';
+    metaQuote.style.display = 'block';
+    tagEl.textContent = docLabel;
+    document.getElementById('pv-footer').textContent = `${docLabel} generado con la Calculadora de Costes · Arquitectura Jurídica`;
+    document.getElementById('pv-issuer-name').textContent = state.issuer.name.trim() || 'Sin nombre';
+    const setLine = (id, val) => {
+      const el = document.getElementById(id);
+      if (val && val.trim()) { el.textContent = val.trim(); el.style.display = ''; }
+      else { el.style.display = 'none'; el.textContent = ''; }
+    };
+    const [issAddr1, issAddr2] = formatAddress(state.issuer);
+    setLine('pv-issuer-nif', state.issuer.nif);
+    setLine('pv-issuer-addr1', issAddr1);
+    setLine('pv-issuer-addr2', issAddr2);
+    setLine('pv-issuer-phone', state.issuer.phone);
+    setLine('pv-issuer-email', state.issuer.email);
+  } else {
+    metaDefault.style.display = '';
+    metaQuote.style.display = 'none';
+    tagEl.textContent = 'Cálculo de costes';
+    document.getElementById('pv-footer').textContent = 'Documento generado por la Calculadora de Costes · Arquitectura Jurídica';
+  }
+
+  // Format date for quote validity / invoice due
+  const formatDate = (iso) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso + 'T00:00:00');
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+    } catch (e) { return ''; }
+  };
+  const validDate = formatDate(state.quoteValid);
+  const refLabel = isInvoice ? 'Factura' : 'Presupuesto';
+  const refStr = state.quoteRef ? `${refLabel} Nº ${state.quoteRef}` : refLabel;
+  const validStr = validDate ? (isInvoice ? `Vencimiento ${validDate}` : `Válido hasta ${validDate}`) : '';
+  let subtitleParts;
+  if (state.isQuote) {
+    subtitleParts = [refStr, today, validStr,
+      `IVA ${state.applyVat ? num(state.vat).toString().replace('.', ',') + '%' : 'no aplicado'}`]
+      .filter(Boolean);
+  } else if (state.mode === 'profitability') {
+    subtitleParts = ['Análisis de margen',
+      `IVA ${state.applyVat ? num(state.vat).toString().replace('.', ',') + '%' : 'no aplicado'}`];
+  } else {
+    subtitleParts = [`Cálculo de precio para margen objetivo del ${fmtPct(profitPct)}`,
+      `IVA ${state.applyVat ? num(state.vat).toString().replace('.', ',') + '%' : 'no aplicado'}`];
+  }
+  if (quantity > 1) subtitleParts.unshift(`${quantity} unidades`);
+  document.getElementById('pv-subtitle').textContent = subtitleParts.join(' · ');
+
+  // Client block (only in quote/invoice mode if there's any client data)
+  const clientSection = document.getElementById('pv-client-section');
+  const hasClientData = state.isQuote && (
+    state.client.name || state.client.nif || state.client.street ||
+    state.client.city || state.client.province || state.client.postal
+  );
+  if (hasClientData) {
+    clientSection.style.display = '';
+    document.getElementById('pv-client-name').textContent = state.client.name.trim() || 'Sin nombre';
+    document.getElementById('pv-client-nif').textContent = state.client.nif.trim() || '';
+    const [cliAddr1, cliAddr2] = formatAddress(state.client);
+    document.getElementById('pv-client-addr1').textContent = cliAddr1 || '';
+    document.getElementById('pv-client-addr2').textContent = cliAddr2 || '';
+  } else {
+    clientSection.style.display = 'none';
+  }
+
+  // Notes section
+  const notesSection = document.getElementById('pv-notes-section');
+  if (state.notes && state.notes.trim()) {
+    notesSection.style.display = '';
+    document.getElementById('pv-notes-content').textContent = state.notes.trim();
+  } else {
+    notesSection.style.display = 'none';
+  }
+
+  const processItems = state.processes.filter(p => num(p.minutes) > 0 || (p.name || '').trim());
+  const pvProc = document.getElementById('pv-processes');
+  if (processItems.length === 0) {
+    pvProc.innerHTML = '<div class="preview-empty">Sin procesos registrados</div>';
+  } else {
+    pvProc.innerHTML = processItems.map((p, idx) => `
+      <div class="preview-list-row">
+        <span class="lbl">${esc(p.name || `Proceso ${idx + 1}`)}</span>
+        <span class="val">${fmtMin(num(p.minutes))}</span>
+      </div>
+    `).join('') + `
+      <div class="preview-list-row subtotal">
+        <span class="lbl">Tiempo por unidad</span>
+        <span class="val">${fmtMin(totalMinUnit)} · ${fmtHours(hoursUnit)}</span>
+      </div>
+      ${quantity > 1 ? `
+      <div class="preview-list-row subtotal">
+        <span class="lbl">Tiempo total (× ${quantity} unidades)</span>
+        <span class="val">${fmtMin(totalMin)} · ${fmtHours(hours)}</span>
+      </div>` : ''}
+    `;
+  }
+
+  const pvLabor = document.getElementById('pv-labor');
+  if (num(state.annualSalary) === 0) {
+    pvLabor.innerHTML = '<div class="preview-empty">Sin salario indicado</div>';
+  } else {
+    pvLabor.innerHTML = `
+      <div class="preview-list-row">
+        <span class="lbl">Salario bruto anual</span>
+        <span class="val">${fmt(num(state.annualSalary))}</span>
+      </div>
+      <div class="preview-list-row">
+        <span class="lbl">Horas anuales (${annualHours === 1760 ? 'jornada completa' : 'jornada personalizada'})</span>
+        <span class="val">${annualHours.toLocaleString('es-ES')} h</span>
+      </div>
+      <div class="preview-list-row">
+        <span class="lbl">Coste por hora</span>
+        <span class="val">${fmt(hourly)}</span>
+      </div>
+      ${quantity > 1 ? `
+      <div class="preview-list-row">
+        <span class="lbl">Mano de obra unitaria (${fmtHours(hoursUnit)})</span>
+        <span class="val">${fmt(laborUnit)}</span>
+      </div>
+      <div class="preview-list-row">
+        <span class="lbl">Subtotal × ${quantity} uds (${fmtHours(hoursGross)})</span>
+        <span class="val">${fmt(laborGross)}</span>
+      </div>` : ''}
+      ${learningDiscount > 0 ? `
+      <div class="preview-list-row">
+        <span class="lbl">Curva de aprendizaje (−${learningDiscount}%)</span>
+        <span class="val">− ${fmt(learningSavings)}</span>
+      </div>` : ''}
+      <div class="preview-list-row subtotal">
+        <span class="lbl">Mano de obra ${quantity > 1 ? `efectiva (${fmtHours(hours)})` : `(${fmtHours(hours)})`}</span>
+        <span class="val">${fmt(labor)}</span>
+      </div>
+    `;
+  }
+
+  // Render directs section
+  const directsSection = document.getElementById('pv-directs-section');
+  if (!state.includeDirects) {
+    directsSection.style.display = 'none';
+  } else {
+    directsSection.style.display = '';
+    const directItems = state.directs.filter(x => num(x.price) > 0 || (x.name || '').trim());
+    const pvDirects = document.getElementById('pv-directs');
+    if (directItems.length === 0) {
+      pvDirects.innerHTML = '<div class="preview-empty">Sin costes directos</div>';
+    } else {
+      pvDirects.innerHTML = directItems.map((x, idx) => `
+        <div class="preview-list-row">
+          <span class="lbl">${esc(x.name || `Coste ${idx + 1}`)}</span>
+          <span class="val">${fmt(num(x.price))}</span>
+        </div>
+      `).join('') + `
+        <div class="preview-list-row subtotal">
+          <span class="lbl">Total costes directos${quantity > 1 ? ` (× ${quantity} uds)` : ''}</span>
+          <span class="val">${fmt(directs)}</span>
+        </div>
+      `;
+    }
+  }
+
+  // Render indirects section
+  const indirectsSection = document.getElementById('pv-indirects-section');
+  if (!state.includeIndirects) {
+    indirectsSection.style.display = 'none';
+  } else {
+    indirectsSection.style.display = '';
+    const indirectItems = state.indirects.filter(x => num(x.price) > 0 || (x.name || '').trim());
+    const pvIndirects = document.getElementById('pv-indirects');
+    if (indirectItems.length === 0) {
+      pvIndirects.innerHTML = '<div class="preview-empty">Sin costes indirectos o compartidos</div>';
+    } else {
+      pvIndirects.innerHTML = indirectItems.map((x, idx) => `
+        <div class="preview-list-row">
+          <span class="lbl">${esc(x.name || `Coste ${idx + 1}`)}</span>
+          <span class="val">${fmt(num(x.price))}</span>
+        </div>
+      `).join('') + `
+        <div class="preview-list-row subtotal">
+          <span class="lbl">Total costes indirectos o compartidos</span>
+          <span class="val">${fmt(indirects)}</span>
+        </div>
+      `;
+    }
+  }
+
+  const supSection = document.getElementById('pv-suplidos-section');
+  if (!state.includeSuplidos) {
+    supSection.style.display = 'none';
+  } else {
+    supSection.style.display = '';
+    const supItems = state.suplidos.filter(x => num(x.price) > 0 || (x.name || '').trim());
+    const pvSup = document.getElementById('pv-suplidos');
+    if (supItems.length === 0) {
+      pvSup.innerHTML = '<div class="preview-empty">Sin suplidos</div>';
+    } else {
+      pvSup.innerHTML = supItems.map((x, idx) => `
+        <div class="preview-list-row">
+          <span class="lbl">${esc(x.name || `Suplido ${idx + 1}`)}</span>
+          <span class="val">${fmt(num(x.price))}</span>
+        </div>
+      `).join('') + `
+        <div class="preview-list-row subtotal">
+          <span class="lbl">Total suplidos${quantity > 1 ? ` (× ${quantity} uds)` : ''} (sin IVA)</span>
+          <span class="val">${fmt(suplidos)}</span>
+        </div>
+      `;
+    }
+  }
+
+  // View mode flags
+  const viewMode = state.viewMode || 'detailed';
+  const isSummary = viewMode === 'summary';
+  const isClient = viewMode === 'client';
+
+  // Toggle preview sections based on view mode
+  const procSection = document.getElementById('pv-processes').closest('.preview-section');
+  const laborSection = document.getElementById('pv-labor').closest('.preview-section');
+  const directsSec = document.getElementById('pv-directs-section');
+  const indirectsSec = document.getElementById('pv-indirects-section');
+  const supSec = document.getElementById('pv-suplidos-section');
+
+  if (isSummary || isClient) {
+    procSection.style.display = 'none';
+    laborSection.style.display = 'none';
+    directsSec.style.display = 'none';
+    indirectsSec.style.display = 'none';
+  } else {
+    procSection.style.display = '';
+    laborSection.style.display = '';
+    directsSec.style.display = state.includeDirects ? '' : 'none';
+    indirectsSec.style.display = state.includeIndirects ? '' : 'none';
+  }
+  // Suplidos detail section: hidden for summary AND client (in client there's a toggle for the aggregate line)
+  if (isSummary || isClient) {
+    supSec.style.display = 'none';
+  } else {
+    supSec.style.display = state.includeSuplidos ? '' : 'none';
+  }
+
+  // Build final calculation rows
+  const finalRows = [];
+  if (isSummary) {
+    finalRows.push({ lbl: 'Costes operativos', val: fmt(internal), bold: true });
+  } else if (!isClient) {
+    // Detailed
+    finalRows.push({ lbl: 'Mano de obra', val: fmt(labor) });
+    if (state.includeDirects) finalRows.push({ lbl: 'Costes directos', val: fmt(directs) });
+    if (state.includeIndirects) finalRows.push({ lbl: 'Costes indirectos o compartidos', val: fmt(indirects) });
+    finalRows.push({ lbl: 'Coste interno total', val: fmt(internal), bold: true });
+  }
+  // Client view: no cost lines at all
+
+  // Show unit price + quantity breakdown when quantity > 1
+  if (quantity > 1) {
+    finalRows.push({ lbl: 'Precio unitario (sin IVA)', val: fmt(unitPrice) });
+    finalRows.push({ lbl: 'Cantidad', val: `× ${quantity} uds` });
+  }
+
+  if (discountAmounts.length > 0) {
+    if (isSummary || isClient) {
+      finalRows.push({ lbl: 'Base imponible bruta', val: fmt(grossPrice) });
+      finalRows.push({ lbl: 'Descuentos aplicados', val: '− ' + fmt(discountTotal) });
+      finalRows.push({ lbl: 'Base imponible', val: fmt(netPrice), bold: true });
+    } else {
+      finalRows.push({ lbl: 'Base imponible bruta', val: fmt(grossPrice) });
+      discountAmounts.forEach(d => {
+        finalRows.push({
+          lbl: `${esc(d.name)} (${d.rate.toString().replace('.', ',')} %)`,
+          val: '− ' + fmt(d.amount)
+        });
+      });
+      finalRows.push({ lbl: 'Base imponible', val: fmt(netPrice), bold: true });
+    }
+  } else {
+    finalRows.push({ lbl: 'Base imponible', val: fmt(netPrice), bold: true });
+  }
+  if (state.applyVat) finalRows.push({ lbl: `IVA (${num(state.vat).toString().replace('.', ',')} %)`, val: '+ ' + fmt(vatAmount) });
+  if (isSummary && extraTaxesList.length > 0) {
+    finalRows.push({ lbl: 'Otros impuestos', val: '+ ' + fmt(extraTaxesTotal) });
+  } else {
+    extraTaxesList.forEach(t => {
+      finalRows.push({
+        lbl: `${esc(t.name)} (${t.rate.toString().replace('.', ',')} %)`,
+        val: '+ ' + fmt(t.amount)
+      });
+    });
+  }
+  // Suplidos line: in client mode, only if showSuplidosToClient is active
+  const showSuplidosLine = state.includeSuplidos && suplidos > 0 &&
+    (!isClient || state.showSuplidosToClient !== false);
+  if (showSuplidosLine) {
+    finalRows.push({ lbl: 'Suplidos (sin IVA)', val: '+ ' + fmt(suplidos) });
+  }
+  // Retentions: hidden completely in client mode
+  if (!isClient) {
+    if (isSummary && retentionsListCalc.length > 0) {
+      finalRows.push({ lbl: 'Retenciones', val: '− ' + fmt(retentionsTotal) });
+    } else {
+      retentionsListCalc.forEach(t => {
+        finalRows.push({
+          lbl: `${esc(t.name)} (${t.rate.toString().replace('.', ',')} %)`,
+          val: '− ' + fmt(t.amount)
+        });
+      });
+    }
+  }
+
+  // Recalculate the displayed total based on what's actually shown
+  let displayedTotal = totalBillable;
+  if (isClient) {
+    // Retentions are hidden, so they're NOT subtracted from the displayed total
+    displayedTotal = displayedTotal + retentionsTotal;
+    // If suplidos are hidden for the client, exclude them from the total
+    if (state.showSuplidosToClient === false) {
+      displayedTotal = displayedTotal - suplidos;
+    }
+  }
+  let totalLabel;
+  if (isClient) {
+    totalLabel = 'Total a pagar';
+  } else {
+    totalLabel = retentionsListCalc.length > 0
+      ? 'Total a cobrar (después de retenciones)'
+      : 'Total a facturar al cliente';
+  }
+
+  document.getElementById('pv-final').innerHTML =
+    finalRows.map(r => `
+      <div class="preview-final-row${r.bold ? ' subtotal' : ''}">
+        <span class="lbl">${r.lbl}</span>
+        <span class="val">${r.val}</span>
+      </div>
+    `).join('') + `
+      <div class="preview-final-row total">
+        <span class="lbl">${totalLabel}</span>
+        <span class="val">${fmt(displayedTotal)}</span>
+      </div>
+    `;
+
+  const profitBox = document.getElementById('pv-profit');
+  if (isClient) {
+    profitBox.style.display = 'none';
+  } else {
+    profitBox.style.display = '';
+    profitBox.classList.toggle('loss', profit < 0);
+    document.getElementById('pv-profit-label').textContent = profit >= 0
+      ? `Beneficio neto · ${fmtPct(profitPct)}`
+      : `Pérdida · ${fmtPct(profitPct)}`;
+    document.getElementById('pv-profit-value').textContent = (profit >= 0 ? '+ ' : '− ') + fmt(Math.abs(profit));
+  }
+}
+
+document.getElementById('btnPrint').addEventListener('click', () => {
+  const previewEl = document.getElementById('preview');
+  if (!previewEl || previewEl.offsetHeight < 50) {
+    showToast('Introduce los datos del cálculo antes de descargar el PDF');
+    return;
+  }
+
+  const btn = document.getElementById('btnPrint');
+  const originalLabel = btn.innerHTML;
+  btn.innerHTML = 'Preparando…';
+  btn.disabled = true;
+
+  const restoreBtn = () => {
+    btn.innerHTML = originalLabel;
+    btn.disabled = false;
+  };
+
+  try {
+    // Collect all <style> tags and Google Fonts <link> from current document
+    const styleTags = Array.from(document.querySelectorAll('style, link[rel="stylesheet"], link[rel="preconnect"]'))
+      .map(el => el.outerHTML)
+      .join('\n');
+
+    // Build a self-contained printable HTML with only the preview
+    const tramiteName = (state.productName || 'Documento').trim();
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>${tramiteName}</title>
+${styleTags}
+<style>
+  @page { margin: 1.5cm; size: A4; }
+  html, body {
+    background: #fff !important;
+    background-image: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #0F2A47 !important;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .preview {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .preview-final, .preview-profit, .preview-section { page-break-inside: avoid; }
+  .preview-profit {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Reset some properties that might interfere in print */
+  * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+${previewEl.outerHTML}
+</body>
+</html>`;
+
+    // Create a hidden iframe to host the printable document
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.cssText = 'position:fixed;right:-9999px;bottom:-9999px;width:210mm;height:297mm;border:0;visibility:hidden;';
+    document.body.appendChild(iframe);
+
+    const cleanup = () => {
+      if (iframe.parentNode) document.body.removeChild(iframe);
+      restoreBtn();
+    };
+
+    // Write HTML into the iframe
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    // Wait for fonts and layout, then trigger print
+    const triggerPrint = () => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        // Cleanup after the print dialog closes (or after a safe delay)
+        setTimeout(cleanup, 1500);
+      } catch (err) {
+        console.error('Print error:', err);
+        cleanup();
+        showToast('No se pudo abrir el diálogo de impresión');
+      }
+    };
+
+    // Wait for fonts to be ready in the iframe (with fallback timeout)
+    const waitForFonts = () => {
+      try {
+        if (iframe.contentDocument && iframe.contentDocument.fonts && iframe.contentDocument.fonts.ready) {
+          iframe.contentDocument.fonts.ready
+            .then(() => setTimeout(triggerPrint, 200))
+            .catch(() => setTimeout(triggerPrint, 600));
+          return;
+        }
+      } catch (e) { /* fall through */ }
+      setTimeout(triggerPrint, 800);
+    };
+
+    iframe.onload = waitForFonts;
+    // Fallback in case onload doesn't fire
+    setTimeout(() => {
+      if (!iframe.dataset.printed) {
+        iframe.dataset.printed = '1';
+        waitForFonts();
+      }
+    }, 1500);
+  } catch (err) {
+    console.error('PDF generation failed:', err);
+    showToast('Error al preparar el PDF');
+    restoreBtn();
+  }
+});
+
+renderProcesses();
+updateLaborSummary();
+</script>
+</body>
+</html>
