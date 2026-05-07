@@ -830,6 +830,52 @@ textarea.field-input {
   cursor: help;
   vertical-align: middle;
 }
+.preview-includes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.preview-includes-list li {
+  position: relative;
+  padding: 6px 0 6px 20px;
+  font-size: 13px;
+  color: var(--ink);
+  font-family: var(--serif);
+  border-bottom: 1px dashed var(--line-soft);
+}
+.preview-includes-list li:last-child { border-bottom: none; }
+.preview-includes-list li:before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  color: var(--accent);
+  font-weight: 600;
+  font-family: var(--sans);
+}
+.preview-anual {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+}
+.preview-anual-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px;
+}
+.preview-anual-lbl {
+  font-family: var(--serif); font-style: italic;
+  color: var(--ink); font-size: 13px;
+}
+.preview-anual-val {
+  font-family: var(--mono); font-weight: 700; font-size: 16px;
+  color: var(--accent);
+}
+.preview-anual-hint {
+  font-size: 11px; color: var(--muted);
+  font-style: italic; margin-top: 4px;
+}
 .preview-list-row.total {
   border-top: 1.5px solid var(--accent);
   margin-top: 6px; padding-top: 10px;
@@ -1407,7 +1453,7 @@ footer {
       </div>
 
       <div class="section-divider" style="margin-top: 8px;">
-        <div class="section-title">Servicios adicionales</div>
+        <div class="section-title" id="addonsSectionTitle">Servicios adicionales</div>
         <div class="section-divider-line"></div>
         <label class="switch">
           <input type="checkbox" id="includeAddons">
@@ -1416,9 +1462,9 @@ footer {
         </label>
       </div>
       <div class="section-content" id="addonsSection" data-collapsed="true">
-        <span class="field-hint" style="display: block; margin-bottom: 12px;">Cargos extra <strong>por unidad</strong> que se suman al precio del servicio base (ej. guardado de información, seguimiento posterior, asistencia adicional). Se aplican antes del descuento y del IVA.</span>
+        <span class="field-hint" id="addonsSectionHint" style="display: block; margin-bottom: 12px;">Cargos extra <strong>por unidad</strong> que se suman al precio del servicio base (ej. guardado de información, seguimiento posterior, asistencia adicional). Se aplican antes del descuento y del IVA.</span>
         <span class="field-hint" style="display: block; margin-bottom: 12px; padding: 10px 12px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: var(--radius); color: var(--ink-soft); line-height: 1.5;">
-          <strong>Tip:</strong> si dejas el <strong>precio vacío</strong> y rellenas <strong>tiempo o costes asociados</strong>, el precio del servicio adicional se autocalcula al margen general del trámite (el más bajo que mantiene la rentabilidad). Aparecerá marcado con <span class="auto-mark" style="cursor:default;">★</span> en el documento.
+          <strong>Tip:</strong> si dejas el <strong>precio vacío</strong> y rellenas <strong>tiempo o costes asociados</strong>, el precio del servicio se autocalcula al margen general del trámite (el más bajo que mantiene la rentabilidad). Aparecerá marcado con <span class="auto-mark" style="cursor:default;">★</span> en el documento.
         </span>
         <div id="addonsList"></div>
         <button class="btn-add" id="addAddon" type="button">+ Añadir servicio adicional</button>
@@ -1781,12 +1827,25 @@ footer {
             </section>
 
             <section class="preview-section" id="pv-detalle-section">
-              <div class="preview-section-title">Detalle</div>
+              <div class="preview-section-title" id="pv-detalle-title">Detalle</div>
               <div class="preview-final" id="pv-final"></div>
+              <div class="preview-anual" id="pv-anual" style="display:none;"></div>
               <div class="preview-profit" id="pv-profit">
                 <div class="preview-profit-label" id="pv-profit-label">Beneficio</div>
                 <div class="preview-profit-value" id="pv-profit-value">—</div>
               </div>
+            </section>
+
+            <section class="preview-section" id="pv-individuales-section" style="display:none;">
+              <div class="preview-section-title">Servicios individuales (cálculo aparte)</div>
+              <span class="field-hint" style="display:block; font-size: 11px; color: var(--muted); margin-bottom: 12px; font-style: italic;">Trámites sueltos que el cliente puede contratar de forma independiente. <strong>No están incluidos en el precio del Servicio Integral</strong> — se facturan aparte.</span>
+              <div class="preview-list" id="pv-individuales-list"></div>
+              <div class="preview-list" id="pv-individuales-totals" style="margin-top: 8px;"></div>
+            </section>
+
+            <section class="preview-section" id="pv-integral-includes-section" style="display:none;">
+              <div class="preview-section-title">El Servicio Integral incluye</div>
+              <ul class="preview-includes-list" id="pv-integral-includes-list"></ul>
             </section>
 
             <section class="preview-section" id="pv-notes-section" style="display:none;">
@@ -2241,6 +2300,17 @@ function updateFlowModeVisibility() {
   // en standard requiere también escoger un modo
   const btn0 = document.getElementById('btn-next-0');
   if (btn0 && isHogar && state.productName) btn0.disabled = false;
+  // En modo hogar, los servicios "adicionales" se llaman "individuales"
+  const titleEl = document.getElementById('addonsSectionTitle');
+  const hintEl = document.getElementById('addonsSectionHint');
+  const addBtn = document.getElementById('addAddon');
+  if (titleEl) titleEl.textContent = isHogar ? 'Servicios individuales' : 'Servicios adicionales';
+  if (hintEl) {
+    hintEl.innerHTML = isHogar
+      ? 'Trámites <strong>individuales</strong> que el cliente puede contratar aparte del Servicio Integral. Cada uno con su precio y, opcionalmente, sus tiempos y costes.'
+      : 'Cargos extra <strong>por unidad</strong> que se suman al precio del servicio base (ej. guardado de información, seguimiento posterior, asistencia adicional). Se aplican antes del descuento y del IVA.';
+  }
+  if (addBtn) addBtn.textContent = isHogar ? '+ Añadir servicio individual' : '+ Añadir servicio adicional';
   // Sincronizar inputs del paso 'empleo' si vamos a entrar
   if (isHogar) syncEmpleoInputsFromState();
   // Refrescar step indicator (visibilidad pestaña Empleo y numeración)
@@ -2833,7 +2903,7 @@ const TEMPLATES = {
     applyVat: true,
     vat: '21',
     annualSalary: '',
-    includeAddons: true,
+    includeAddons: false,
     addons: [
       { name: 'Solicitud C.C.C.', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false },
       { name: 'Asignación número de afiliación (NAF/NUSS)', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false },
@@ -3072,6 +3142,8 @@ function renderHogarOnlyPreview() {
   hide('pv-indirects-section', false);
   hide('pv-detalle-section', false);
   hide('pv-notes-section', false);
+  hide('pv-integral-includes-section', false);
+  hide('pv-individuales-section', false);
   const profitEl = document.getElementById('pv-profit');
   if (profitEl) profitEl.style.display = 'none';
   // Hero panel (resumen lateral de margen, beneficio, etc.) — ocultar
@@ -3211,12 +3283,16 @@ function compute() {
   const { cost: laborUnitBase, totalMin: totalMinUnitBase, hours: hoursUnitBase, hourly, annualHours } = calcLabor();
   const { directs: directsUnitBase, indirects: indirectsBase, fixed: fixedRaw, suplidos: suplidosUnit } = calcCosts();
 
-  // Addon-associated costs (only counted when the addons section is included)
-  const addonsExtraMinutesUnit = state.includeAddons
+  // En modo "hogar", los servicios individuales NO se mezclan con el Servicio Integral:
+  // se muestran aparte, con su propio precio y cálculo, sin sumar al total ni al coste interno.
+  const includeAddonsInServicio = state.flowMode !== 'hogar';
+
+  // Addon-associated costs (only counted when the addons section is included AND not in hogar mode)
+  const addonsExtraMinutesUnit = (state.includeAddons && includeAddonsInServicio)
     ? state.addons.reduce((s, a) => s + num(a.extraMinutes), 0) : 0;
-  const addonsExtraDirectsUnit = state.includeAddons
+  const addonsExtraDirectsUnit = (state.includeAddons && includeAddonsInServicio)
     ? state.addons.reduce((s, a) => s + num(a.extraDirect), 0) : 0;
-  const addonsExtraIndirects = state.includeAddons
+  const addonsExtraIndirects = (state.includeAddons && includeAddonsInServicio)
     ? state.addons.reduce((s, a) => s + num(a.extraIndirect), 0) : 0;
   // Addon time costs at the same hourly rate as base labor
   const addonsExtraLaborUnit = (addonsExtraMinutesUnit / 60) * hourly;
@@ -3326,7 +3402,10 @@ function compute() {
     baseMarginForAddons = v / 100;
   } else {
     // En modo profitability: margen del servicio base + addons con precio fijo
-    const manualAddons = addonsDetailed.filter(a => !a.auto && a.fixedPrice !== null);
+    // En hogar: SOLO del Servicio Integral (los servicios individuales van aparte)
+    const manualAddons = includeAddonsInServicio
+      ? addonsDetailed.filter(a => !a.auto && a.fixedPrice !== null)
+      : [];
     const manualAddonsRevenueUnit = manualAddons.reduce((s, a) => s + a.fixedPrice, 0);
     const manualAddonsInternalUnit = manualAddons.reduce((s, a) => s + a.internalUnit, 0);
     // Coste total considerando todo escala correctamente
@@ -3364,6 +3443,9 @@ function compute() {
     .map(a => ({ name: a.name, price: a.effectivePrice, auto: a.auto, internalUnit: a.internalUnit }));
   const addonsUnitTotal = addonsList.reduce((s, a) => s + a.price, 0);
   const addonsTotal = addonsUnitTotal * quantity;
+  // En hogar, los addons NO se suman al precio del Servicio Integral (van aparte)
+  const addonsUnitForServicio = includeAddonsInServicio ? addonsUnitTotal : 0;
+  const addonsTotalForServicio = includeAddonsInServicio ? addonsTotal : 0;
 
   // Discounts (applied to the service price BEFORE VAT)
   const discountsList = state.includeDiscounts
@@ -3380,8 +3462,8 @@ function compute() {
   let grossPrice, netPrice, profit, profitPct, unitPrice;
   if (state.mode === 'profitability') {
     unitPrice = v;
-    // Total = (base + addons) * quantity
-    grossPrice = (unitPrice + addonsUnitTotal) * quantity;
+    // Total = (base + addons) * quantity (en hogar, addons va aparte → no se suma)
+    grossPrice = (unitPrice + addonsUnitForServicio) * quantity;
     netPrice = grossPrice * discountFactor;
     profit = netPrice - internal;
     profitPct = netPrice > 0 ? (profit / netPrice) * 100 : 0;
@@ -3390,7 +3472,7 @@ function compute() {
     netPrice = internal / (1 - v / 100);
     grossPrice = discountFactor > 0 ? netPrice / discountFactor : netPrice;
     // Subtract the addons from the gross to get the recommended base service price per unit
-    unitPrice = (grossPrice - addonsTotal) / quantity;
+    unitPrice = (grossPrice - addonsTotalForServicio) / quantity;
     profit = netPrice - internal;
   }
   const discountAmounts = discountsList.map(d => ({ ...d, amount: grossPrice * d.rate / 100 }));
@@ -3743,6 +3825,27 @@ function compute() {
   const isSummary = viewMode === 'summary';
   const isClient = viewMode === 'client';
 
+  // === EMPLEADOS DE HOGAR — Lista descriptiva del Servicio Integral en vistas Resumen/Cliente ===
+  const integralIncludesSection = document.getElementById('pv-integral-includes-section');
+  if (integralIncludesSection) {
+    const isHogar = state.flowMode === 'hogar';
+    const showIncludes = isHogar && (isSummary || isClient) && !state.hogarOnlySS;
+    if (showIncludes) {
+      const taskNames = state.processes
+        .map(p => (p.name || '').trim())
+        .filter(n => n.length > 0);
+      if (taskNames.length > 0) {
+        document.getElementById('pv-integral-includes-list').innerHTML =
+          taskNames.map(n => `<li>${esc(n)}</li>`).join('');
+        integralIncludesSection.style.display = '';
+      } else {
+        integralIncludesSection.style.display = 'none';
+      }
+    } else {
+      integralIncludesSection.style.display = 'none';
+    }
+  }
+
   // Toggle preview sections based on view mode
   const procSection = document.getElementById('pv-processes').closest('.preview-section');
   const laborSection = document.getElementById('pv-labor').closest('.preview-section');
@@ -3791,9 +3894,11 @@ function compute() {
   }
 
   // Addons: shown as line items between base price and discounts
-  if (addonsList.length > 0) {
+  // En hogar, los addons NO se muestran aquí (van en sección aparte "Servicios individuales")
+  if (addonsList.length > 0 && includeAddonsInServicio) {
+    const addonsLabel = 'Servicios adicionales';
     if (isSummary) {
-      finalRows.push({ lbl: 'Servicios adicionales', val: '+ ' + fmt(addonsTotal) });
+      finalRows.push({ lbl: addonsLabel, val: '+ ' + fmt(addonsTotal) });
     } else {
       addonsList.forEach(a => {
         const autoMark = (a.auto && !isClient) ? ' <span class="auto-mark" title="Precio autocalculado al margen general">★</span>' : '';
@@ -3898,6 +4003,81 @@ function compute() {
       ? `Beneficio neto · ${fmtPct(profitPct)}`
       : `Pérdida · ${fmtPct(profitPct)}`;
     document.getElementById('pv-profit-value').textContent = (profit >= 0 ? '+ ' : '− ') + fmt(Math.abs(profit));
+  }
+
+  // ============== HOGAR — Coste anual del Servicio Integral (× 12) ==============
+  const anualEl = document.getElementById('pv-anual');
+  if (anualEl) {
+    if (state.flowMode === 'hogar' && !state.hogarOnlySS && grossPrice > 0) {
+      // Total que paga el cliente (con IVA si aplica)
+      const totalConIva = state.applyVat
+        ? netPrice * (1 + num(state.vat) / 100)
+        : netPrice;
+      const totalAnual = totalConIva * 12;
+      anualEl.innerHTML = `
+        <div class="preview-anual-row">
+          <span class="preview-anual-lbl">Coste anual estimado del Servicio Integral</span>
+          <span class="preview-anual-val">${fmt(totalAnual)}</span>
+        </div>
+        <div class="preview-anual-hint">Total mensual × 12 meses (asume cuota mensual constante)</div>
+      `;
+      anualEl.style.display = '';
+    } else {
+      anualEl.style.display = 'none';
+    }
+  }
+
+  // Cambiar el título del bloque "Detalle" en hogar
+  const detalleTitle = document.getElementById('pv-detalle-title');
+  if (detalleTitle) {
+    detalleTitle.textContent = (state.flowMode === 'hogar' && !state.hogarOnlySS)
+      ? 'Servicio Integral — Detalle'
+      : 'Detalle';
+  }
+
+  // ============== HOGAR — Servicios individuales aparte ==============
+  const individualesSection = document.getElementById('pv-individuales-section');
+  if (individualesSection) {
+    const showIndividuales = state.flowMode === 'hogar' && !state.hogarOnlySS && addonsList.length > 0;
+    if (showIndividuales) {
+      const vat = num(state.vat);
+      const applyVat = state.applyVat;
+      const indivRows = addonsList.map(a => {
+        const autoMark = (a.auto && !isClient) ? ' <span class="auto-mark" title="Precio autocalculado al margen general">★</span>' : '';
+        const totalUnit = a.price; // precio por servicio
+        return `
+          <div class="preview-list-row">
+            <span class="lbl">${esc(a.name)}${autoMark}</span>
+            <span class="val">${fmt(totalUnit)}</span>
+          </div>
+        `;
+      }).join('');
+      const subtotalIndiv = addonsList.reduce((s, a) => s + a.price, 0);
+      const ivaIndiv = applyVat ? subtotalIndiv * (vat / 100) : 0;
+      const totalIndiv = subtotalIndiv + ivaIndiv;
+      let totalsHtml = '';
+      if (applyVat) {
+        totalsHtml += `
+          <div class="preview-list-row subtotal">
+            <span class="lbl">Subtotal (sin IVA)</span>
+            <span class="val">${fmt(subtotalIndiv)}</span>
+          </div>
+          <div class="preview-list-row">
+            <span class="lbl">IVA (${fmtPct(vat)})</span>
+            <span class="val">+ ${fmt(ivaIndiv)}</span>
+          </div>`;
+      }
+      totalsHtml += `
+        <div class="preview-list-row total">
+          <span class="lbl">Total servicios individuales</span>
+          <span class="val">${fmt(totalIndiv)}</span>
+        </div>`;
+      document.getElementById('pv-individuales-list').innerHTML = indivRows;
+      document.getElementById('pv-individuales-totals').innerHTML = totalsHtml;
+      individualesSection.style.display = '';
+    } else {
+      individualesSection.style.display = 'none';
+    }
   }
 }
 
