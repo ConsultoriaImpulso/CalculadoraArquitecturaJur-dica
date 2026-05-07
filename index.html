@@ -231,6 +231,42 @@ h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
   line-height: 1.4;
 }
 
+/* ============ RADIO GROUPS (datos del empleo) ============ */
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.radio-group label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  background: var(--paper);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.radio-group label:hover {
+  border-color: var(--ink);
+  background: var(--bg);
+}
+.radio-group label:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 500;
+}
+.radio-group input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
 /* ============ ADDON EXTRAS (collapsible) ============ */
 .addon-item { margin-bottom: 8px; }
 .addon-toggle {
@@ -260,6 +296,19 @@ h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
 }
 .addon-extras.expanded { display: grid; }
 .addon-extras-field { display: flex; flex-direction: column; gap: 4px; }
+.addon-extras-field .addon-extra-name {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-color: var(--line-soft);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-bottom: 2px;
+}
+.addon-extras-field .addon-extra-name::placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
 .addon-extras-label {
   font-size: 10px; color: var(--muted);
   text-transform: uppercase; letter-spacing: 0.06em;
@@ -475,6 +524,10 @@ h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
 .btn-ghost:hover { background: var(--bg); border-color: var(--ink); }
 .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn-accent:hover { background: #1f3a2c; border-color: #1f3a2c; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: #163f73; border-color: #163f73; }
+.btn-secondary { background: var(--paper); color: var(--ink); border-color: var(--line); }
+.btn-secondary:hover { background: var(--bg); border-color: var(--ink); }
 
 /* ============ RESULT HERO ============ */
 .result-hero {
@@ -769,6 +822,27 @@ textarea.field-input {
   color: var(--ink); font-weight: 400; font-size: 13px;
 }
 .preview-list-row.subtotal .val { color: var(--accent); font-weight: 600; }
+.auto-mark {
+  display: inline-block;
+  color: var(--warm);
+  font-size: 11px;
+  margin-left: 4px;
+  cursor: help;
+  vertical-align: middle;
+}
+.preview-list-row.total {
+  border-top: 1.5px solid var(--accent);
+  margin-top: 6px; padding-top: 10px;
+}
+.preview-list-row.total .lbl {
+  font-family: var(--serif); font-style: italic;
+  color: var(--ink); font-weight: 600; font-size: 14px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.preview-list-row.total .val {
+  color: var(--accent); font-weight: 700; font-size: 15px;
+  font-family: var(--mono);
+}
 .preview-empty {
   font-size: 12px; color: var(--muted);
   font-style: italic; font-family: var(--serif); padding: 4px 0;
@@ -921,7 +995,9 @@ footer {
   </header>
 
   <nav class="steps" id="stepIndicator" aria-label="Progreso">
-    <button class="step-pill active" data-step="0" type="button"><span class="step-num">1</span> Modo</button>
+    <button class="step-pill active" data-step="0" type="button"><span class="step-num">1</span> Inicio</button>
+    <div class="step-divider" id="step-divider-empleo" style="display:none;"></div>
+    <button class="step-pill" data-step="empleo" type="button" id="step-pill-empleo" style="display:none;"><span class="step-num">2</span> Empleo</button>
     <div class="step-divider"></div>
     <button class="step-pill" data-step="1" type="button"><span class="step-num">2</span> Tiempo</button>
     <div class="step-divider"></div>
@@ -953,6 +1029,10 @@ footer {
           <div class="template-title">Baja de Vehículos por Abandono</div>
           <div class="template-desc">Recinto privado. Procesos, costes directos e indirectos pre-rellenados.</div>
         </button>
+        <button class="template-card" data-template="alta-empleado-hogar" type="button">
+          <div class="template-title">Alta de empleado/a de hogar</div>
+          <div class="template-desc">Calculadora oficial SS 2026 (datos del empleo) + Servicio Integral pre-cargado para calcular margen.</div>
+        </button>
       </div>
 
       <div class="field-group" style="margin-top: 28px;">
@@ -961,26 +1041,154 @@ footer {
         <input type="text" class="field-input" id="productName" placeholder="Ej. Constitución de SL">
       </div>
 
-      <div class="section-divider" style="margin-top: 28px;">
-        <div class="section-title">Modo de cálculo</div>
-        <div class="section-divider-line"></div>
-      </div>
+      <div id="step0ModeWrapper">
+        <div class="section-divider" style="margin-top: 28px;">
+          <div class="section-title">Modo de cálculo</div>
+          <div class="section-divider-line"></div>
+        </div>
 
-      <div class="mode-grid">
-        <button class="mode-card" data-mode="profitability" type="button">
-          <div class="mode-icon">%</div>
-          <div class="mode-title">Calcular margen</div>
-          <div class="mode-text">Pones el precio del servicio y te calculo cuánto ganas y qué porcentaje de margen obtienes.</div>
-        </button>
-        <button class="mode-card" data-mode="target" type="button">
-          <div class="mode-icon">€</div>
-          <div class="mode-title">Margen objetivo</div>
-          <div class="mode-text">Indicas el margen que buscas y te digo a qué precio hay que vender el servicio para conseguirlo.</div>
-        </button>
+        <div class="mode-grid">
+          <button class="mode-card" data-mode="profitability" type="button">
+            <div class="mode-icon">%</div>
+            <div class="mode-title">Calcular margen</div>
+            <div class="mode-text">Pones el precio del servicio y te calculo cuánto ganas y qué porcentaje de margen obtienes.</div>
+          </button>
+          <button class="mode-card" data-mode="target" type="button">
+            <div class="mode-icon">€</div>
+            <div class="mode-title">Margen objetivo</div>
+            <div class="mode-text">Indicas el margen que buscas y te digo a qué precio hay que vender el servicio para conseguirlo.</div>
+          </button>
+        </div>
+      </div>
+      <div id="step0HogarHint" style="display:none; padding: 16px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: var(--radius); margin-top: 24px; font-size: 13px; color: var(--ink-soft);">
+        En esta plantilla el modo de cálculo se elige <strong>más adelante</strong>, justo antes de los tiempos del Servicio Integral. Antes vamos a calcular la nómina y la cuota de Seguridad Social.
       </div>
       <div class="actions">
         <span></span>
         <button class="btn" id="btn-next-0" disabled type="button">Siguiente →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP "EMPLEO" — solo en flowMode hogar -->
+  <section class="step-content" data-step="empleo">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-eyebrow">Cálculo de nómina y Seguridad Social</div>
+        <div class="panel-title">Datos del empleo</div>
+        <p class="panel-desc">Calculadora oficial del Sistema Especial de Empleados de Hogar (datos 2026 — RD 126/2026). Calcula la nómina del trabajador y las cuotas de Seguridad Social. Esto es lo que paga <strong>el cliente al empleado y a la SS</strong> — no son ingresos para la gestoría.</p>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Tipo de contrato</label>
+        <div class="radio-group" data-name="empleoContractType">
+          <label><input type="radio" name="empleoContractType" value="indefinido" checked> Indefinido</label>
+          <label><input type="radio" name="empleoContractType" value="temporal"> Temporal</label>
+          <label><input type="radio" name="empleoContractType" value="fijo-discontinuo"> Fijo discontinuo</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Tipo de jornada</label>
+        <div class="radio-group" data-name="empleoJornadaType">
+          <label><input type="radio" name="empleoJornadaType" value="completa" checked> Completa (40 h/sem.)</label>
+          <label><input type="radio" name="empleoJornadaType" value="horas"> Por horas</label>
+        </div>
+      </div>
+
+      <div class="field-group" id="empleoHoursPerMonthGroup" style="display:none;">
+        <label class="field-label" for="empleoHoursPerMonth">¿Cuántas horas trabajará al mes?</label>
+        <input type="number" inputmode="numeric" min="1" step="1" class="field-input" id="empleoHoursPerMonth" placeholder="Ej. 80">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Modalidad de pago</label>
+        <div class="radio-group" data-name="empleoPaymentType">
+          <label><input type="radio" name="empleoPaymentType" value="mensual" checked> Mensual</label>
+          <label><input type="radio" name="empleoPaymentType" value="horas"> Por horas</label>
+        </div>
+      </div>
+
+      <div class="field-group" id="empleoMonthlySalaryGroup">
+        <label class="field-label" for="empleoMonthlySalary">Salario mensual del trabajador</label>
+        <span class="field-hint">Incluye complementos como pernocta, horas de guardia o salario en especie.</span>
+        <div class="input-with-suffix">
+          <input type="number" inputmode="decimal" min="0" step="0.01" class="field-input" id="empleoMonthlySalary" placeholder="0,00">
+          <span class="input-suffix">€/mes</span>
+        </div>
+      </div>
+
+      <div class="field-group" id="empleoHourlySalaryGroup" style="display:none;">
+        <label class="field-label" for="empleoHourlySalary">Salario por hora</label>
+        <span class="field-hint">SMI 2026: 8,90 €/h (jornada completa o parcial) · 9,55 €/h (por horas con vacaciones incluidas).</span>
+        <div class="input-with-suffix">
+          <input type="number" inputmode="decimal" min="0" step="0.01" class="field-input" id="empleoHourlySalary" placeholder="0,00">
+          <span class="input-suffix">€/hora</span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Pagas extras</label>
+        <div class="radio-group" data-name="empleoPagasExtra">
+          <label><input type="radio" name="empleoPagasExtra" value="incluidas" checked> Incluidas en el salario</label>
+          <label><input type="radio" name="empleoPagasExtra" value="aparte"> Aparte (con importe)</label>
+        </div>
+      </div>
+
+      <div class="field-group" id="empleoPagasExtraGroup" style="display:none;">
+        <label class="field-label" for="empleoPagasExtraTotal">Importe total pagas extras al año</label>
+        <div class="input-with-suffix">
+          <input type="number" inputmode="decimal" min="0" step="0.01" class="field-input" id="empleoPagasExtraTotal" placeholder="0,00">
+          <span class="input-suffix">€/año</span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">¿Cuidará de una familia numerosa?</label>
+        <div class="radio-group" data-name="empleoFamiliaNumerosa">
+          <label><input type="radio" name="empleoFamiliaNumerosa" value="no" checked> No</label>
+          <label><input type="radio" name="empleoFamiliaNumerosa" value="si-no-solicitada"> Sí (descuento del 20%)</label>
+          <label><input type="radio" name="empleoFamiliaNumerosa" value="si-solicitada"> Sí, solicitada (descuento del 45%)</label>
+        </div>
+      </div>
+
+      <div class="summary" id="ssSummary" style="margin-top: 24px;">
+        <div class="summary-stat" id="ss-stat-salarioBase" style="display:none;">
+          <span class="summary-label">Salario base</span>
+          <span class="summary-value muted" id="ss-salarioBase">— €</span>
+        </div>
+        <div class="summary-stat" id="ss-stat-prorrata" style="display:none;">
+          <span class="summary-label">Prorrata pagas extras</span>
+          <span class="summary-value muted" id="ss-prorrata">— €</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label" id="ss-salary-label">Retribución mensual</span>
+          <span class="summary-value muted" id="ss-salary">— €</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Tramo</span>
+          <span class="summary-value muted" id="ss-tramo">—</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Cuota empleador</span>
+          <span class="summary-value muted" id="ss-empleador">— €</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Cuota empleado</span>
+          <span class="summary-value muted" id="ss-empleado">— €</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-label">Cuota total SS</span>
+          <span class="summary-value accent" id="ss-total">— €</span>
+        </div>
+      </div>
+
+      <div class="footer-actions" style="margin-top: 36px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;">
+        <button class="btn btn-ghost" data-back type="button">← Atrás</button>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn btn-secondary" id="btn-empleo-finish" type="button">Finalizar y descargar PDF</button>
+          <button class="btn btn-primary" id="btn-empleo-continue" type="button">Continuar con cálculo del servicio →</button>
+        </div>
       </div>
     </div>
   </section>
@@ -992,6 +1200,31 @@ footer {
         <div class="panel-eyebrow">Paso 02 — Tiempo y mano de obra</div>
         <div class="panel-title">¿Cuánto tiempo lleva el trámite?</div>
         <p class="panel-desc">Apunta cada subproceso del trámite con su duración en minutos. Lo sumo y lo convierto a horas automáticamente.</p>
+      </div>
+
+      <!-- Selector de modo (margen / objetivo) — solo visible en flowMode hogar -->
+      <div id="hogarModeSelector" style="display:none;">
+        <div class="section-divider" style="margin-top: 0;">
+          <div class="section-title">¿Cómo quieres calcular el Servicio Integral?</div>
+          <div class="section-divider-line"></div>
+        </div>
+        <span class="field-hint" style="display:block; margin-bottom: 16px;">Antes de meter los tiempos, decide si vas a calcular el margen a partir de un precio que ya tienes (modo Margen) o si quieres que te calcule el precio mínimo a partir de un margen objetivo.</span>
+        <div class="mode-grid" id="hogarModeGrid">
+          <button class="mode-card" data-hogar-mode="profitability" type="button">
+            <div class="mode-icon">%</div>
+            <div class="mode-title">Calcular margen</div>
+            <div class="mode-text">Tú indicas cuánto cobras por el Servicio Integral y la calculadora te dice el margen real.</div>
+          </button>
+          <button class="mode-card" data-hogar-mode="target" type="button">
+            <div class="mode-icon">€</div>
+            <div class="mode-title">Margen objetivo</div>
+            <div class="mode-text">Tú indicas el margen que quieres obtener y la calculadora te da el precio mínimo para conseguirlo.</div>
+          </button>
+        </div>
+        <div class="section-divider" style="margin-top: 28px;">
+          <div class="section-title">Tareas que componen el Servicio Integral</div>
+          <div class="section-divider-line"></div>
+        </div>
       </div>
 
       <div id="processList"></div>
@@ -1184,6 +1417,9 @@ footer {
       </div>
       <div class="section-content" id="addonsSection" data-collapsed="true">
         <span class="field-hint" style="display: block; margin-bottom: 12px;">Cargos extra <strong>por unidad</strong> que se suman al precio del servicio base (ej. guardado de información, seguimiento posterior, asistencia adicional). Se aplican antes del descuento y del IVA.</span>
+        <span class="field-hint" style="display: block; margin-bottom: 12px; padding: 10px 12px; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: var(--radius); color: var(--ink-soft); line-height: 1.5;">
+          <strong>Tip:</strong> si dejas el <strong>precio vacío</strong> y rellenas <strong>tiempo o costes asociados</strong>, el precio del servicio adicional se autocalcula al margen general del trámite (el más bajo que mantiene la rentabilidad). Aparecerá marcado con <span class="auto-mark" style="cursor:default;">★</span> en el documento.
+        </span>
         <div id="addonsList"></div>
         <button class="btn-add" id="addAddon" type="button">+ Añadir servicio adicional</button>
       </div>
@@ -1498,8 +1734,29 @@ footer {
               </div>
             </section>
 
+            <!-- ========= EMPLEADOS DE HOGAR ========= -->
+            <section class="preview-section" id="pv-empleo-section" style="display:none;">
+              <div class="preview-section-title">Datos del empleo</div>
+              <div class="preview-list" id="pv-empleo-data"></div>
+            </section>
+
+            <section class="preview-section" id="pv-ss-section" style="display:none;">
+              <div class="preview-section-title">Cuota mensual a la Seguridad Social</div>
+              <div class="preview-list" id="pv-ss-detail"></div>
+            </section>
+
+            <section class="preview-section" id="pv-coste-mensual-section" style="display:none;">
+              <div class="preview-section-title">Coste total mensual del empleo (cargo del cliente)</div>
+              <div class="preview-list" id="pv-coste-mensual"></div>
+            </section>
+
+            <section class="preview-section" id="pv-servicio-integral-divider" style="display:none;">
+              <div class="preview-section-title">Servicio Integral — Arquitectura Jurídica</div>
+              <span class="field-hint" style="font-size: 11px; color: var(--muted);">Lo que cobramos al cliente por gestionar el alta y la cotización mensual.</span>
+            </section>
+
             <section class="preview-section">
-              <div class="preview-section-title">Procesos del trámite</div>
+              <div class="preview-section-title" id="pv-processes-title">Procesos del trámite</div>
               <div class="preview-list" id="pv-processes"></div>
             </section>
 
@@ -1523,7 +1780,7 @@ footer {
               <div class="preview-list" id="pv-suplidos"></div>
             </section>
 
-            <section class="preview-section">
+            <section class="preview-section" id="pv-detalle-section">
               <div class="preview-section-title">Detalle</div>
               <div class="preview-final" id="pv-final"></div>
               <div class="preview-profit" id="pv-profit">
@@ -1566,8 +1823,8 @@ footer {
 
 <script>
 const state = {
-  step: 0,
-  visited: new Set([0]),
+  step: '0',
+  visited: new Set(['0']),
   mode: null,
   processes: [{ name: '', minutes: '' }],
   annualSalary: '',
@@ -1585,7 +1842,7 @@ const state = {
   applyVat: true,
   vat: 21,
   includeAddons: false,
-  addons: [{ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', expanded: false }],
+  addons: [{ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false }],
   addonsHaveExtras: true,
   includeDiscounts: false,
   discounts: [{ name: '', rate: '' }],
@@ -1602,6 +1859,18 @@ const state = {
   notes: '',
   includeNotes: false,
   viewMode: 'detailed',
+  flowMode: 'standard',
+  empleo: {
+    contractType: 'indefinido',
+    jornadaType: 'completa',
+    hoursPerMonth: '',
+    paymentType: 'mensual',
+    monthlySalary: '',
+    hourlySalary: '',
+    pagasExtraIncluidas: true,
+    pagasExtraTotal: '',
+    familiaNumerosa: 'no'
+  },
   showSuplidosToClient: true,
 };
 
@@ -1646,30 +1915,167 @@ function calcCosts() {
   return { directs, indirects, fixed: directs + indirects, suplidos };
 }
 
+// ============================================================
+// CÁLCULO DE COTIZACIÓN A LA SEGURIDAD SOCIAL — EMPLEADOS DE HOGAR
+// Datos 2026 (Real Decreto 126/2026, BOE 19-feb-2026)
+// IMPORTANTE: revisar cada enero por si cambian tramos o porcentajes.
+// ============================================================
+const SS_HOGAR_2026 = {
+  // Tramos: si retribución mensual ≤ max, se aplica esa base de cotización
+  tramos: [
+    { max: 329,    base: 305 },
+    { max: 510,    base: 436 },
+    { max: 693,    base: 602 },
+    { max: 876,    base: 785 },
+    { max: 1061,   base: 970 },
+    { max: 1241,   base: 1150 },
+    { max: 1424,   base: 1424 },
+    { max: Infinity, base: null }  // tramo 8: base = retribución, tope 5101.20
+  ],
+  topeMaximo: 5101.20,
+  // Porcentajes de cotización
+  empleador: {
+    contingenciasComunes: 0.236,
+    atep: 0.015,                  // accidentes de trabajo y enfermedad profesional
+    desempleo: 0.055,
+    fogasa: 0.002,
+    mei: 0.0075
+  },
+  empleado: {
+    contingenciasComunes: 0.047,
+    desempleo: 0.0155,
+    mei: 0.0015
+  },
+  // Bonificaciones automáticas para el empleador
+  bonifContingenciasComunes: 0.20,           // 20% reducción
+  bonifContingenciasFamiliaSolicitada: 0.45, // 45% si familia numerosa solicitada
+  bonifDesempleo: 0.80,                       // 80% bonif desempleo
+  bonifFogasa: 0.80                           // 80% bonif FOGASA
+};
+
+function calcSeguridadSocialHogar(empleo) {
+  const E = empleo || {};
+  // 1. Calcular salario base (sin prorratear pagas extras)
+  let salarioBase = 0;
+  if (E.jornadaType === 'horas') {
+    salarioBase = num(E.hourlySalary) * num(E.hoursPerMonth);
+  } else {
+    salarioBase = num(E.monthlySalary);
+  }
+  // 2. Prorrata de las pagas extras (sólo si están aparte)
+  const pagasExtrasProrrata = E.pagasExtraIncluidas === false
+    ? num(E.pagasExtraTotal) / 12
+    : 0;
+  // 3. Retribución mensual computable = base de la cotización
+  const monthlyBase = salarioBase + pagasExtrasProrrata;
+  // 2. Determinar tramo y base de cotización
+  const T = SS_HOGAR_2026.tramos;
+  let tramoIdx = T.length - 1;
+  for (let i = 0; i < T.length; i++) {
+    if (monthlyBase <= T[i].max) { tramoIdx = i; break; }
+  }
+  const baseCotizacion = T[tramoIdx].base !== null
+    ? T[tramoIdx].base
+    : Math.min(monthlyBase, SS_HOGAR_2026.topeMaximo);
+  // 3. Bonificaciones (familia numerosa)
+  let bonifCC = SS_HOGAR_2026.bonifContingenciasComunes;
+  if (E.familiaNumerosa === 'si-solicitada') {
+    bonifCC = SS_HOGAR_2026.bonifContingenciasFamiliaSolicitada;
+  }
+  const bonifDesempleo = SS_HOGAR_2026.bonifDesempleo;
+  const bonifFogasa = SS_HOGAR_2026.bonifFogasa;
+  // 4. Cuotas empleador (con bonificaciones)
+  const RE = SS_HOGAR_2026.empleador;
+  const empCC = baseCotizacion * RE.contingenciasComunes * (1 - bonifCC);
+  const empATEP = baseCotizacion * RE.atep;
+  const empDesempleo = baseCotizacion * RE.desempleo * (1 - bonifDesempleo);
+  const empFogasa = baseCotizacion * RE.fogasa * (1 - bonifFogasa);
+  const empMEI = baseCotizacion * RE.mei;
+  const totalEmpleador = empCC + empATEP + empDesempleo + empFogasa + empMEI;
+  // 5. Cuotas empleado (sin bonificaciones)
+  const RT = SS_HOGAR_2026.empleado;
+  const trabCC = baseCotizacion * RT.contingenciasComunes;
+  const trabDesempleo = baseCotizacion * RT.desempleo;
+  const trabMEI = baseCotizacion * RT.mei;
+  const totalEmpleado = trabCC + trabDesempleo + trabMEI;
+  return {
+    monthlyBase,
+    salarioBase,
+    pagasExtrasProrrata,
+    pagasExtraIncluidas: E.pagasExtraIncluidas !== false,
+    tramo: tramoIdx + 1,
+    baseCotizacion,
+    bonifCC,
+    empleador: { contingenciasComunes: empCC, atep: empATEP, desempleo: empDesempleo, fogasa: empFogasa, mei: empMEI, total: totalEmpleador },
+    empleado:  { contingenciasComunes: trabCC, desempleo: trabDesempleo, mei: trabMEI, total: totalEmpleado },
+    totalCuota: totalEmpleador + totalEmpleado,
+    salarioNeto: monthlyBase - totalEmpleado,
+    costeTotalEmpleador: monthlyBase + totalEmpleador
+  };
+}
+
+// Step navigation order — depends on flowMode
+const STEP_ORDER_STANDARD = ['0', '1', '2', '3'];
+const STEP_ORDER_HOGAR = ['0', 'empleo', '1', '2', '3'];
+function getStepOrder() {
+  return state.flowMode === 'hogar' ? STEP_ORDER_HOGAR : STEP_ORDER_STANDARD;
+}
+function getStepIdx(step) {
+  return getStepOrder().indexOf(String(step));
+}
+
 function go(step) {
-  if (step < 0 || step > 3) return;
+  step = String(step);
+  const order = getStepOrder();
+  if (!order.includes(step)) return;
   state.step = step;
   state.visited.add(step);
   document.querySelectorAll('.step-content').forEach(el => {
-    el.classList.toggle('active', +el.dataset.step === step);
+    el.classList.toggle('active', el.dataset.step === step);
   });
-  document.querySelectorAll('#stepIndicator .step-pill').forEach(el => {
-    const s = +el.dataset.step;
-    el.classList.toggle('active', s === step);
-    el.classList.toggle('done', s !== step && state.visited.has(s) && s < step);
-  });
-  if (step === 1) { renderProcesses(); updateLaborSummary(); }
-  if (step === 2) { renderCostsLists(); applySectionToggles(); updateCostsSummary(); }
-  if (step === 3) { initFinalStep(); compute(); }
+  // Update step indicator: visibility, active/done states, and dynamic numbering
+  updateStepIndicator();
+  if (step === 'empleo') { syncEmpleoInputsFromState(); }
+  if (step === '1') { updateHogarModeSelectorVisibility(); renderProcesses(); updateLaborSummary(); }
+  if (step === '2') { renderCostsLists(); applySectionToggles(); updateCostsSummary(); }
+  if (step === '3') { initFinalStep(); compute(); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go(state.step - 1)));
-document.querySelectorAll('[data-forward]').forEach(b => b.addEventListener('click', () => go(state.step + 1)));
+function updateStepIndicator() {
+  const order = getStepOrder();
+  const isHogar = state.flowMode === 'hogar';
+  const empleoPill = document.getElementById('step-pill-empleo');
+  const empleoDivider = document.getElementById('step-divider-empleo');
+  if (empleoPill) empleoPill.style.display = isHogar ? '' : 'none';
+  if (empleoDivider) empleoDivider.style.display = isHogar ? '' : 'none';
+  // Renumber pills dynamically based on visible order
+  const pills = document.querySelectorAll('#stepIndicator .step-pill');
+  let n = 1;
+  pills.forEach(pill => {
+    if (pill.style.display === 'none') return;
+    const numSpan = pill.querySelector('.step-num');
+    if (numSpan) numSpan.textContent = n;
+    const s = pill.dataset.step;
+    pill.classList.toggle('active', s === state.step);
+    pill.classList.toggle('done', s !== state.step && state.visited.has(s) && getStepIdx(s) < getStepIdx(state.step));
+    n++;
+  });
+}
+document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => {
+  const order = getStepOrder();
+  const idx = order.indexOf(state.step);
+  if (idx > 0) go(order[idx - 1]);
+}));
+document.querySelectorAll('[data-forward]').forEach(b => b.addEventListener('click', () => {
+  const order = getStepOrder();
+  const idx = order.indexOf(state.step);
+  if (idx >= 0 && idx < order.length - 1) go(order[idx + 1]);
+}));
 document.querySelectorAll('#stepIndicator .step-pill').forEach(pill => {
-  pill.addEventListener('click', () => go(+pill.dataset.step));
+  pill.addEventListener('click', () => go(pill.dataset.step));
 });
 
-const modeBtns = document.querySelectorAll('.mode-card');
+const modeBtns = document.querySelectorAll('#step0ModeWrapper .mode-card');
 const next0 = document.getElementById('btn-next-0');
 modeBtns.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1679,7 +2085,227 @@ modeBtns.forEach(btn => {
     next0.disabled = false;
   });
 });
-next0.addEventListener('click', () => go(1));
+next0.addEventListener('click', () => {
+  // En modo hogar saltamos al paso 'empleo'; en modo standard al paso 1
+  if (state.flowMode === 'hogar') go('empleo');
+  else go('1');
+});
+
+// === Selector de modo del Servicio Integral (en paso 1, solo en modo hogar) ===
+function updateHogarModeSelectorVisibility() {
+  const sel = document.getElementById('hogarModeSelector');
+  if (!sel) return;
+  const isHogar = state.flowMode === 'hogar';
+  sel.style.display = isHogar ? '' : 'none';
+  // Highlight current mode
+  if (isHogar) {
+    document.querySelectorAll('#hogarModeGrid .mode-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.hogarMode === state.mode);
+    });
+  }
+}
+document.querySelectorAll('#hogarModeGrid .mode-card').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#hogarModeGrid .mode-card').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.mode = btn.dataset.hogarMode;
+  });
+});
+
+// === Botones del paso 'empleo' ===
+const btnEmpleoFinish = document.getElementById('btn-empleo-finish');
+const btnEmpleoContinue = document.getElementById('btn-empleo-continue');
+if (btnEmpleoFinish) {
+  btnEmpleoFinish.addEventListener('click', () => {
+    if (!state.mode) state.mode = 'profitability';
+    state.viewMode = 'client';
+    state.hogarOnlySS = true;
+    // Renderizar el preview directamente, sin cambiar de paso
+    renderHogarOnlyPreview();
+    // Pequeña espera para que el DOM se actualice y luego disparar print
+    setTimeout(() => {
+      const btnPrint = document.getElementById('btnPrint');
+      if (btnPrint) btnPrint.click();
+    }, 400);
+  });
+}
+if (btnEmpleoContinue) {
+  btnEmpleoContinue.addEventListener('click', () => {
+    state.hogarOnlySS = false;
+    // Restaurar visibilidad de secciones que se hayan podido ocultar antes
+    const sections = ['pv-processes', 'pv-labor'];
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const sec = el.closest('.preview-section');
+        if (sec) sec.style.display = '';
+      }
+    });
+    ['pv-detalle-section', 'pv-notes-section'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
+    const heroEl = document.getElementById('hero');
+    if (heroEl) heroEl.style.display = '';
+    const profitEl = document.getElementById('pv-profit');
+    if (profitEl) profitEl.style.display = '';
+    go('1');
+  });
+}
+
+// ============================================================
+// EMPLEADOS DE HOGAR — UI: inputs del empleo + cálculo SS en vivo
+// ============================================================
+function updateSSCalculation() {
+  if (state.flowMode !== 'hogar') return;
+  const ss = calcSeguridadSocialHogar(state.empleo);
+  const tramoEl = document.getElementById('ss-tramo');
+  const salaryEl = document.getElementById('ss-salary');
+  const salaryLabelEl = document.getElementById('ss-salary-label');
+  const salarioBaseStat = document.getElementById('ss-stat-salarioBase');
+  const salarioBaseEl = document.getElementById('ss-salarioBase');
+  const prorrataStat = document.getElementById('ss-stat-prorrata');
+  const prorrataEl = document.getElementById('ss-prorrata');
+  const empleadorEl = document.getElementById('ss-empleador');
+  const empleadoEl = document.getElementById('ss-empleado');
+  const totalEl = document.getElementById('ss-total');
+  if (!tramoEl) return;
+
+  // Mostrar/ocultar filas de desglose según opción de pagas extras
+  const isApart = ss.pagasExtraIncluidas === false;
+  const hasProrrata = isApart && ss.pagasExtrasProrrata > 0;
+  // Salario base solo se muestra cuando hay prorrata (para que se vea el desglose)
+  if (salarioBaseStat) salarioBaseStat.style.display = hasProrrata ? '' : 'none';
+  if (prorrataStat) prorrataStat.style.display = hasProrrata ? '' : 'none';
+  // Cambia el label de "Salario mensual" → "Retribución mensual" cuando hay desglose
+  if (salaryLabelEl) salaryLabelEl.textContent = hasProrrata ? 'Retribución mensual (con prorrata)' : 'Salario mensual';
+
+  if (ss.monthlyBase > 0) {
+    tramoEl.textContent = ss.tramo + (ss.tramo === 8 ? ' (>1.424 €)' : '');
+    tramoEl.classList.remove('muted');
+    salaryEl.textContent = fmt(ss.monthlyBase);
+    salaryEl.classList.remove('muted');
+    if (hasProrrata) {
+      salarioBaseEl.textContent = fmt(ss.salarioBase);
+      salarioBaseEl.classList.remove('muted');
+      prorrataEl.textContent = '+ ' + fmt(ss.pagasExtrasProrrata);
+      prorrataEl.classList.remove('muted');
+    }
+    empleadorEl.textContent = fmt(ss.empleador.total);
+    empleadorEl.classList.remove('muted');
+    empleadoEl.textContent = fmt(ss.empleado.total);
+    empleadoEl.classList.remove('muted');
+    totalEl.textContent = fmt(ss.totalCuota);
+    totalEl.classList.remove('muted');
+  } else {
+    tramoEl.textContent = '—'; tramoEl.classList.add('muted');
+    salaryEl.textContent = '— €'; salaryEl.classList.add('muted');
+    if (salarioBaseEl) { salarioBaseEl.textContent = '— €'; salarioBaseEl.classList.add('muted'); }
+    if (prorrataEl) { prorrataEl.textContent = '— €'; prorrataEl.classList.add('muted'); }
+    empleadorEl.textContent = '— €'; empleadorEl.classList.add('muted');
+    empleadoEl.textContent = '— €'; empleadoEl.classList.add('muted');
+    totalEl.textContent = '— €'; totalEl.classList.add('muted');
+  }
+}
+
+function syncEmpleoInputsFromState() {
+  const E = state.empleo || {};
+  const setRadio = (name, value) => {
+    document.querySelectorAll(`input[name="${name}"]`).forEach(r => r.checked = (r.value === value));
+  };
+  setRadio('empleoContractType', E.contractType || 'indefinido');
+  setRadio('empleoJornadaType', E.jornadaType || 'completa');
+  setRadio('empleoPaymentType', E.paymentType || 'mensual');
+  setRadio('empleoPagasExtra', E.pagasExtraIncluidas !== false ? 'incluidas' : 'aparte');
+  setRadio('empleoFamiliaNumerosa', E.familiaNumerosa || 'no');
+  document.getElementById('empleoHoursPerMonth').value = E.hoursPerMonth || '';
+  document.getElementById('empleoMonthlySalary').value = E.monthlySalary || '';
+  document.getElementById('empleoHourlySalary').value = E.hourlySalary || '';
+  document.getElementById('empleoPagasExtraTotal').value = E.pagasExtraTotal || '';
+  // Toggle visibility of conditional sub-fields
+  document.getElementById('empleoHoursPerMonthGroup').style.display = (E.jornadaType === 'horas') ? '' : 'none';
+  document.getElementById('empleoMonthlySalaryGroup').style.display = (E.paymentType === 'mensual') ? '' : 'none';
+  document.getElementById('empleoHourlySalaryGroup').style.display = (E.paymentType === 'horas') ? '' : 'none';
+  document.getElementById('empleoPagasExtraGroup').style.display = (E.pagasExtraIncluidas === false) ? '' : 'none';
+  updateSSCalculation();
+}
+
+function updateFlowModeVisibility() {
+  const isHogar = state.flowMode === 'hogar';
+  // Step 0: ocultar selector de modo y mostrar hint cuando hogar
+  const wrap = document.getElementById('step0ModeWrapper');
+  const hint = document.getElementById('step0HogarHint');
+  if (wrap) wrap.style.display = isHogar ? 'none' : '';
+  if (hint) hint.style.display = isHogar ? 'block' : 'none';
+  // Botón Siguiente del paso 0: en hogar se habilita en cuanto se elige plantilla;
+  // en standard requiere también escoger un modo
+  const btn0 = document.getElementById('btn-next-0');
+  if (btn0 && isHogar && state.productName) btn0.disabled = false;
+  // Sincronizar inputs del paso 'empleo' si vamos a entrar
+  if (isHogar) syncEmpleoInputsFromState();
+  // Refrescar step indicator (visibilidad pestaña Empleo y numeración)
+  updateStepIndicator();
+}
+
+// Wire up listeners for empleo inputs
+function wireEmpleoListeners() {
+  document.querySelectorAll('input[name="empleoContractType"]').forEach(r => {
+    r.addEventListener('change', e => {
+      if (!e.target.checked) return;
+      state.empleo.contractType = e.target.value;
+      updateSSCalculation();
+    });
+  });
+  document.querySelectorAll('input[name="empleoJornadaType"]').forEach(r => {
+    r.addEventListener('change', e => {
+      if (!e.target.checked) return;
+      state.empleo.jornadaType = e.target.value;
+      document.getElementById('empleoHoursPerMonthGroup').style.display = (e.target.value === 'horas') ? '' : 'none';
+      updateSSCalculation();
+    });
+  });
+  document.querySelectorAll('input[name="empleoPaymentType"]').forEach(r => {
+    r.addEventListener('change', e => {
+      if (!e.target.checked) return;
+      state.empleo.paymentType = e.target.value;
+      document.getElementById('empleoMonthlySalaryGroup').style.display = (e.target.value === 'mensual') ? '' : 'none';
+      document.getElementById('empleoHourlySalaryGroup').style.display = (e.target.value === 'horas') ? '' : 'none';
+      updateSSCalculation();
+    });
+  });
+  document.querySelectorAll('input[name="empleoPagasExtra"]').forEach(r => {
+    r.addEventListener('change', e => {
+      if (!e.target.checked) return;
+      state.empleo.pagasExtraIncluidas = (e.target.value === 'incluidas');
+      document.getElementById('empleoPagasExtraGroup').style.display = (e.target.value === 'aparte') ? '' : 'none';
+      updateSSCalculation();
+    });
+  });
+  document.querySelectorAll('input[name="empleoFamiliaNumerosa"]').forEach(r => {
+    r.addEventListener('change', e => {
+      if (!e.target.checked) return;
+      state.empleo.familiaNumerosa = e.target.value;
+      updateSSCalculation();
+    });
+  });
+  ['empleoHoursPerMonth', 'empleoMonthlySalary', 'empleoHourlySalary', 'empleoPagasExtraTotal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', e => {
+      const key = id.replace('empleo', '');
+      // map ids → state keys
+      const mapping = {
+        empleoHoursPerMonth: 'hoursPerMonth',
+        empleoMonthlySalary: 'monthlySalary',
+        empleoHourlySalary: 'hourlySalary',
+        empleoPagasExtraTotal: 'pagasExtraTotal'
+      };
+      state.empleo[mapping[id]] = e.target.value;
+      updateSSCalculation();
+    });
+  });
+}
+wireEmpleoListeners();
 
 function renderProcesses() {
   const list = document.getElementById('processList');
@@ -1854,16 +2480,19 @@ function renderAddons() {
       <div class="addon-extras ${expanded}" data-extras="${i}">
         <div class="addon-extras-field">
           <label class="addon-extras-label">Tiempo extra (min/ud)</label>
+          <input class="field-input addon-extra-name" type="text" placeholder="Nombre del proceso (opcional)" value="${esc(a.extraMinutesName || '')}" data-i="${i}" data-f="extraMinutesName">
           <input class="field-input" type="number" inputmode="numeric" min="0" step="1" placeholder="0" value="${esc(a.extraMinutes)}" data-i="${i}" data-f="extraMinutes">
           <span class="addon-extras-hint">Mano de obra adicional por unidad. Aplica curva de aprendizaje.</span>
         </div>
         <div class="addon-extras-field">
           <label class="addon-extras-label">Coste directo extra (€/ud)</label>
+          <input class="field-input addon-extra-name" type="text" placeholder="Nombre del coste directo (opcional)" value="${esc(a.extraDirectName || '')}" data-i="${i}" data-f="extraDirectName">
           <input class="field-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${esc(a.extraDirect)}" data-i="${i}" data-f="extraDirect">
           <span class="addon-extras-hint">Por unidad. Escala con la cantidad.</span>
         </div>
         <div class="addon-extras-field">
           <label class="addon-extras-label">Coste indirecto extra (€)</label>
+          <input class="field-input addon-extra-name" type="text" placeholder="Nombre del coste indirecto (opcional)" value="${esc(a.extraIndirectName || '')}" data-i="${i}" data-f="extraIndirectName">
           <input class="field-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${esc(a.extraIndirect)}" data-i="${i}" data-f="extraIndirect">
           <span class="addon-extras-hint">Total del lote. No escala con la cantidad.</span>
         </div>
@@ -1882,7 +2511,7 @@ function renderAddons() {
     btn.addEventListener('click', () => {
       const i = +btn.dataset.del;
       state.addons.splice(i, 1);
-      if (state.addons.length === 0) state.addons.push({ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', expanded: false });
+      if (state.addons.length === 0) state.addons.push({ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false });
       renderAddons(); compute();
     });
   });
@@ -1899,7 +2528,7 @@ function renderAddons() {
   document.getElementById('addonsSection').dataset.collapsed = !state.includeAddons;
 }
 document.getElementById('addAddon').addEventListener('click', () => {
-  state.addons.push({ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', expanded: false });
+  state.addons.push({ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false });
   renderAddons();
 });
 document.getElementById('includeAddons').addEventListener('change', e => {
@@ -2180,6 +2809,53 @@ const TEMPLATES = {
       { name: 'Socios ANEAC', rate: '30.77' }
     ],
     addonsHaveExtras: false
+  },
+  'alta-empleado-hogar': {
+    productName: 'Alta de empleado/a de hogar',
+    mode: 'profitability',
+    flowMode: 'hogar',
+    processes: [
+      { name: 'Solicitud Código de Cuenta de Cotización (C.C.C.)', minutes: '' },
+      { name: 'Elaboración y firma SMS del Contrato de Trabajo', minutes: '' },
+      { name: 'Asesoría Jurídica permanente en materia laboral', minutes: '' },
+      { name: 'Altas, variaciones (dos al año) y Bajas en Seguridad Social', minutes: '' },
+      { name: 'Gestión y envío de nóminas al empleador', minutes: '' },
+      { name: 'Liquidación y finiquito (incluye cálculo indemnización)', minutes: '' },
+      { name: 'Gestión Incapacidad Temporal (solo respecto documentación empleador)', minutes: '' }
+    ],
+    includeDirects: false,
+    directs: [{ name: '', price: '' }],
+    includeIndirects: false,
+    indirects: [{ name: '', price: '' }],
+    includeSuplidos: false,
+    suplidos: [{ name: '', price: '' }],
+    serviceInput: '',
+    applyVat: true,
+    vat: '21',
+    annualSalary: '',
+    includeAddons: true,
+    addons: [
+      { name: 'Solicitud C.C.C.', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false },
+      { name: 'Asignación número de afiliación (NAF/NUSS)', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false },
+      { name: 'Alta + contrato laboral + 1ª nómina', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false },
+      { name: 'Variaciones de datos', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false },
+      { name: 'Baja Seguridad Social', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false },
+      { name: 'Liquidación y finiquito', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false },
+      { name: 'Elaboración de nóminas (unidad)', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false },
+      { name: 'Consultas y asesoramiento jurídico (½ hora)', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false }
+    ],
+    addonsHaveExtras: true,
+    empleo: {
+      contractType: 'indefinido',
+      jornadaType: 'completa',
+      hoursPerMonth: '',
+      paymentType: 'mensual',
+      monthlySalary: '',
+      hourlySalary: '',
+      pagasExtraIncluidas: true,
+      pagasExtraTotal: '',
+      familiaNumerosa: 'no'
+    }
   }
 };
 
@@ -2198,12 +2874,21 @@ function applyTemplate(id) {
     state.includeDiscounts = false;
     state.discounts = [{ name: '', rate: '' }];
     state.includeAddons = false;
-    state.addons = [{ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', expanded: false }];
+    state.addons = [{ name: '', price: '', extraMinutes: '', extraDirect: '', extraIndirect: '', extraMinutesName: '', extraDirectName: '', extraIndirectName: '', expanded: false }];
     state.addonsHaveExtras = true;
+    state.flowMode = 'standard';
+    state.empleo = {
+      contractType: 'indefinido', jornadaType: 'completa',
+      hoursPerMonth: '', paymentType: 'mensual',
+      monthlySalary: '', hourlySalary: '',
+      pagasExtraIncluidas: true, pagasExtraTotal: '',
+      familiaNumerosa: 'no'
+    };
   } else {
     const t = TEMPLATES[id];
     state.productName = t.productName;
     if (t.mode) state.mode = t.mode;
+    state.flowMode = t.flowMode || 'standard';
     state.processes = t.processes.map(p => ({ ...p }));
     state.includeDirects = t.includeDirects;
     state.directs = t.directs.map(d => ({ ...d }));
@@ -2220,6 +2905,7 @@ function applyTemplate(id) {
     if (t.includeAddons !== undefined) state.includeAddons = t.includeAddons;
     if (t.addons) state.addons = t.addons.map(a => ({ ...a, expanded: false }));
     state.addonsHaveExtras = (t.addonsHaveExtras !== false);
+    if (t.empleo) state.empleo = { ...t.empleo };
   }
   // Refresh visible inputs in step 1
   document.getElementById('productName').value = state.productName;
@@ -2232,10 +2918,11 @@ function applyTemplate(id) {
     document.querySelectorAll('.mode-card').forEach(c => {
       c.classList.toggle('selected', c.dataset.mode === state.mode);
     });
-    // Enable next button since both name and mode are set
     const btn0 = document.getElementById('btn-next-0');
     if (btn0) btn0.disabled = false;
   }
+  // If we're already in step 2, refresh flow-mode visibility (hogar inputs etc.)
+  updateFlowModeVisibility();
 }
 
 document.querySelectorAll('#templateGrid .template-card').forEach(card => {
@@ -2327,6 +3014,185 @@ document.querySelectorAll('input[name="docType"]').forEach(r => {
   });
 });
 
+// Renderiza el preview SOLO con la simulación SS (sin servicio integral),
+// sin depender de que se haya rellenado precio del servicio. Se invoca cuando
+// el usuario pulsa "Finalizar y descargar PDF" en el paso Empleo y quiere
+// solo la nómina + cuotas SS.
+function renderHogarOnlyPreview() {
+  const box = document.getElementById('resultBox');
+  const empty = document.getElementById('resultEmpty');
+  if (box) box.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+
+  // === Cabecera del documento ===
+  const today = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+  const productEl = document.getElementById('pv-product');
+  const subtitleEl = document.getElementById('pv-subtitle');
+  const modeEl = document.getElementById('pv-mode');
+  const dateEl = document.getElementById('pv-date');
+  if (productEl) productEl.textContent = (state.productName || '').trim() || 'Alta de empleado/a de hogar';
+  if (subtitleEl) subtitleEl.textContent = 'Simulación de cuotas — Sistema Especial Empleados de Hogar 2026';
+  if (modeEl) modeEl.textContent = 'Simulación SS';
+  if (dateEl) dateEl.textContent = today;
+
+  // === Cliente (si está activo el modo presupuesto/factura) ===
+  const clientSection = document.getElementById('pv-client-section');
+  if (state.isQuote && state.client && (state.client.name || '').trim()) {
+    if (clientSection) clientSection.style.display = '';
+    const nameEl = document.getElementById('pv-client-name');
+    const nifEl = document.getElementById('pv-client-nif');
+    const a1 = document.getElementById('pv-client-addr1');
+    const a2 = document.getElementById('pv-client-addr2');
+    if (nameEl) nameEl.textContent = state.client.name.trim();
+    if (nifEl) nifEl.textContent = (state.client.nif || '').trim();
+    const street = (state.client.street || '').trim();
+    const number = (state.client.number || '').trim();
+    const postal = (state.client.postal || '').trim();
+    const city = (state.client.city || '').trim();
+    const province = (state.client.province || '').trim();
+    if (a1) a1.textContent = [street + (number ? ' ' + number : ''), (state.client.extra || '').trim()].filter(Boolean).join(' · ');
+    if (a2) a2.textContent = [postal, city, province].filter(Boolean).join(' · ');
+  } else if (clientSection) {
+    clientSection.style.display = 'none';
+  }
+
+  // === Bloque empleo + Cuota SS + Coste total mensual ===
+  renderEmpleoSSBlock(true);
+
+  // === Ocultar todas las demás secciones ===
+  const hide = (id, isClosest) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const target = isClosest ? el.closest('.preview-section') : el;
+    if (target) target.style.display = 'none';
+  };
+  hide('pv-processes', true);
+  hide('pv-labor', true);
+  hide('pv-directs-section', false);
+  hide('pv-indirects-section', false);
+  hide('pv-detalle-section', false);
+  hide('pv-notes-section', false);
+  const profitEl = document.getElementById('pv-profit');
+  if (profitEl) profitEl.style.display = 'none';
+  // Hero panel (resumen lateral de margen, beneficio, etc.) — ocultar
+  const heroEl = document.getElementById('hero');
+  if (heroEl) heroEl.style.display = 'none';
+}
+
+// Renderiza el bloque "Datos del empleo + Cuota SS + Coste mensual" en el preview.
+// Se invoca tanto desde compute() (modo trámite completo) como desde
+// renderHogarOnlyPreview() (modo solo SS).
+function renderEmpleoSSBlock(isHogarOnly) {
+  const empleoSection = document.getElementById('pv-empleo-section');
+  const ssSection = document.getElementById('pv-ss-section');
+  const costeMensualSection = document.getElementById('pv-coste-mensual-section');
+  const integralDivider = document.getElementById('pv-servicio-integral-divider');
+  const processesTitle = document.getElementById('pv-processes-title');
+  if (state.flowMode !== 'hogar') {
+    if (empleoSection) empleoSection.style.display = 'none';
+    if (ssSection) ssSection.style.display = 'none';
+    if (costeMensualSection) costeMensualSection.style.display = 'none';
+    if (integralDivider) integralDivider.style.display = 'none';
+    if (processesTitle) processesTitle.textContent = 'Procesos del trámite';
+    return;
+  }
+  const ss = calcSeguridadSocialHogar(state.empleo);
+  const E = state.empleo || {};
+  const contractLabels = { 'indefinido': 'Indefinido', 'temporal': 'Temporal', 'fijo-discontinuo': 'Fijo discontinuo' };
+  const jornadaLabels = { 'completa': 'Completa (40 h/sem.)', 'horas': 'Por horas' };
+  const familiaLabels = {
+    'no': 'No',
+    'si-no-solicitada': 'Sí (descuento 20%)',
+    'si-solicitada': 'Sí, solicitada (descuento 45%)'
+  };
+  const pagasLabel = E.pagasExtraIncluidas !== false ? 'Incluidas en el salario' : 'Aparte';
+  const empleoRows = [
+    { lbl: 'Tipo de contrato', val: contractLabels[E.contractType] || '—' },
+    { lbl: 'Tipo de jornada', val: jornadaLabels[E.jornadaType] || '—' }
+  ];
+  if (E.jornadaType === 'horas' && num(E.hoursPerMonth) > 0) {
+    empleoRows.push({ lbl: 'Horas al mes', val: num(E.hoursPerMonth) + ' h' });
+  }
+  if (E.paymentType === 'horas' && num(E.hourlySalary) > 0) {
+    empleoRows.push({ lbl: 'Salario por hora', val: fmt(num(E.hourlySalary)) + '/h' });
+  }
+  empleoRows.push({ lbl: 'Pagas extras', val: pagasLabel });
+  if (E.pagasExtraIncluidas === false && num(E.pagasExtraTotal) > 0) {
+    empleoRows.push({ lbl: 'Importe pagas extras', val: fmt(num(E.pagasExtraTotal)) + '/año' });
+  }
+  empleoRows.push({ lbl: 'Familia numerosa', val: familiaLabels[E.familiaNumerosa] || 'No' });
+  if (ss.monthlyBase > 0) {
+    const hasProrrata = ss.pagasExtraIncluidas === false && ss.pagasExtrasProrrata > 0;
+    if (hasProrrata) {
+      empleoRows.push({ lbl: 'Salario base mensual', val: fmt(ss.salarioBase) + '/mes' });
+      empleoRows.push({ lbl: 'Prorrata pagas extras (mensual)', val: '+ ' + fmt(ss.pagasExtrasProrrata) + '/mes' });
+      empleoRows.push({ lbl: 'Retribución mensual computable', val: fmt(ss.monthlyBase) + '/mes', subtotal: true });
+    } else {
+      empleoRows.push({ lbl: 'Salario mensual pactado', val: fmt(ss.monthlyBase) + '/mes', subtotal: true });
+    }
+  }
+  document.getElementById('pv-empleo-data').innerHTML = empleoRows.map(r => `
+    <div class="preview-list-row${r.subtotal ? ' subtotal' : ''}">
+      <span class="lbl">${esc(r.lbl)}</span>
+      <span class="val">${esc(r.val)}</span>
+    </div>
+  `).join('');
+  empleoSection.style.display = '';
+
+  // SS detail
+  if (ss.monthlyBase > 0) {
+    const bonifPctCC = Math.round(ss.bonifCC * 100);
+    const ssRows = [
+      { lbl: `Base de cotización (tramo ${ss.tramo})`, val: fmt(ss.baseCotizacion) },
+      { lbl: 'Cuota empleador (con bonificaciones)', val: fmt(ss.empleador.total), subtotal: true },
+      { lbl: `— Contingencias comunes (23,6% · bonif. ${bonifPctCC}%)`, val: fmt(ss.empleador.contingenciasComunes), sub: true },
+      { lbl: '— Accidentes de trabajo (1,5%)', val: fmt(ss.empleador.atep), sub: true },
+      { lbl: '— Desempleo (5,5% · bonif. 80%)', val: fmt(ss.empleador.desempleo), sub: true },
+      { lbl: '— FOGASA (0,2% · bonif. 80%)', val: fmt(ss.empleador.fogasa), sub: true },
+      { lbl: '— MEI (0,75%)', val: fmt(ss.empleador.mei), sub: true },
+      { lbl: 'Cuota empleado', val: fmt(ss.empleado.total), subtotal: true },
+      { lbl: '— Contingencias comunes (4,7%)', val: fmt(ss.empleado.contingenciasComunes), sub: true },
+      { lbl: '— Desempleo (1,55%)', val: fmt(ss.empleado.desempleo), sub: true },
+      { lbl: '— MEI (0,15%)', val: fmt(ss.empleado.mei), sub: true },
+      { lbl: 'TOTAL CUOTA SEGURIDAD SOCIAL', val: fmt(ss.totalCuota) + '/mes', total: true }
+    ];
+    document.getElementById('pv-ss-detail').innerHTML = ssRows.map(r => `
+      <div class="preview-list-row${r.subtotal ? ' subtotal' : ''}${r.total ? ' total' : ''}"${r.sub ? ' style="padding-left: 12px; opacity: 0.85;"' : ''}>
+        <span class="lbl">${esc(r.lbl)}</span>
+        <span class="val">${esc(r.val)}</span>
+      </div>
+    `).join('');
+    ssSection.style.display = '';
+
+    // Coste mensual
+    document.getElementById('pv-coste-mensual').innerHTML = `
+      <div class="preview-list-row">
+        <span class="lbl">Salario al empleado</span>
+        <span class="val">${fmt(ss.monthlyBase)}</span>
+      </div>
+      <div class="preview-list-row">
+        <span class="lbl">+ Cuota Seguridad Social total</span>
+        <span class="val">${fmt(ss.totalCuota)}</span>
+      </div>
+      <div class="preview-list-row total">
+        <span class="lbl">COSTE TOTAL MENSUAL</span>
+        <span class="val">${fmt(ss.monthlyBase + ss.totalCuota)}/mes</span>
+      </div>
+    `;
+    costeMensualSection.style.display = '';
+  } else {
+    ssSection.style.display = 'none';
+    costeMensualSection.style.display = 'none';
+  }
+
+  if (isHogarOnly) {
+    if (integralDivider) integralDivider.style.display = 'none';
+  } else {
+    if (integralDivider) integralDivider.style.display = '';
+    if (processesTitle) processesTitle.textContent = 'Tareas que componen el Servicio Integral';
+  }
+}
+
 function compute() {
   if (!state.mode) {
     document.getElementById('resultBox').style.display = 'none';
@@ -2414,7 +3280,9 @@ function compute() {
   const empty = document.getElementById('resultEmpty');
 
   let valid = false;
-  if (state.mode === 'profitability') valid = v > 0;
+  // In profitability mode, allow zero base price if there are addons covering revenue
+  const hasAddonsRevenue = state.includeAddons && state.addons.some(a => num(a.price) > 0);
+  if (state.mode === 'profitability') valid = v > 0 || hasAddonsRevenue;
   else valid = v > 0 && v < 100 && internal > 0;
 
   if (!valid) {
@@ -2428,12 +3296,72 @@ function compute() {
   box.style.display = 'block';
   empty.style.display = 'none';
 
-  // Addons (extra services charged on top of the base unit price, BEFORE discount)
-  const addonsList = state.includeAddons
-    ? state.addons
-        .map(a => ({ name: (a.name || '').trim() || 'Servicio adicional', price: num(a.price) }))
-        .filter(a => a.price > 0)
-    : [];
+  // ============== ADDONS — procesamiento individual ==============
+  // Cada addon tiene un coste individual (tiempo + directos + indirectos asociados).
+  // Si NO tiene precio fijo pero SÍ tiene costes, su precio se autocalcula
+  // al margen general del trámite (el más bajo que mantiene la rentabilidad).
+  const rawAddons = state.includeAddons ? state.addons : [];
+  const addonsDetailed = rawAddons.map(a => {
+    const aMin = num(a.extraMinutes);
+    const aDir = num(a.extraDirect);
+    const aIndir = num(a.extraIndirect);
+    const aLabor = (aMin / 60) * hourly;
+    const aInternalUnit = aLabor + aDir + aIndir;
+    const hasFixedPrice = a.price !== '' && num(a.price) > 0;
+    const hasName = (a.name || '').trim() !== '';
+    return {
+      name: (a.name || '').trim() || 'Servicio adicional',
+      fixedPrice: hasFixedPrice ? num(a.price) : null,
+      internalUnit: aInternalUnit,
+      auto: !hasFixedPrice && aInternalUnit > 0,
+      hasName,
+      valid: hasFixedPrice || aInternalUnit > 0
+    };
+  });
+
+  // Compute the "base margin" — what we apply to auto-priced addons
+  let baseMarginForAddons;
+  if (state.mode === 'target') {
+    // En modo objetivo, el margen objetivo se aplica directamente
+    baseMarginForAddons = v / 100;
+  } else {
+    // En modo profitability: margen del servicio base + addons con precio fijo
+    const manualAddons = addonsDetailed.filter(a => !a.auto && a.fixedPrice !== null);
+    const manualAddonsRevenueUnit = manualAddons.reduce((s, a) => s + a.fixedPrice, 0);
+    const manualAddonsInternalUnit = manualAddons.reduce((s, a) => s + a.internalUnit, 0);
+    // Coste total considerando todo escala correctamente
+    // Variable (escala con qty): labor base * learning + directs base + manual addons internal
+    // Fijo (no escala): indirects del paso 3 (indirectsBase)
+    const manualRevenueTotal = (v + manualAddonsRevenueUnit) * quantity;
+    const manualCostVarUnit = (laborUnitBase * learningFactor) + directsUnitBase + manualAddonsInternalUnit;
+    const manualCostTotal = manualCostVarUnit * quantity + indirectsBase;
+    baseMarginForAddons = manualRevenueTotal > 0
+      ? (manualRevenueTotal - manualCostTotal) / manualRevenueTotal
+      : 0;
+  }
+
+  // Compute effective price for each addon
+  addonsDetailed.forEach(a => {
+    if (a.auto) {
+      // Auto-price: keep the same margin as the base
+      // If margin >= 1 (impossible), or <= -1 (loss), fall back to break-even
+      if (baseMarginForAddons >= 0.999 || baseMarginForAddons <= -10) {
+        a.effectivePrice = a.internalUnit;
+      } else if (baseMarginForAddons <= 0) {
+        // Margin is negative or zero → addon at break-even (price = cost)
+        a.effectivePrice = a.internalUnit;
+      } else {
+        a.effectivePrice = a.internalUnit / (1 - baseMarginForAddons);
+      }
+    } else {
+      a.effectivePrice = a.fixedPrice !== null ? a.fixedPrice : 0;
+    }
+  });
+
+  // Build the list used for display + computation (only valid addons with price > 0)
+  const addonsList = addonsDetailed
+    .filter(a => a.effectivePrice > 0)
+    .map(a => ({ name: a.name, price: a.effectivePrice, auto: a.auto, internalUnit: a.internalUnit }));
   const addonsUnitTotal = addonsList.reduce((s, a) => s + a.price, 0);
   const addonsTotal = addonsUnitTotal * quantity;
 
@@ -2622,13 +3550,41 @@ function compute() {
 
   const processItems = state.processes.filter(p => num(p.minutes) > 0 || (p.name || '').trim());
   const pvProc = document.getElementById('pv-processes');
+
+  // ============== EMPLEADOS DE HOGAR — preview empleo + cuota SS ==============
+  renderEmpleoSSBlock(false);
+  // Si se viene del botón "Finalizar PDF" del paso Empleo, ocultar bloque servicio
+  if (state.flowMode === 'hogar' && state.hogarOnlySS) {
+    const procSec = document.getElementById('pv-processes').closest('.preview-section');
+    const laborSec = document.getElementById('pv-labor').closest('.preview-section');
+    const detalleSec = document.getElementById('pv-detalle-section');
+    if (procSec) procSec.style.display = 'none';
+    if (laborSec) laborSec.style.display = 'none';
+    if (detalleSec) detalleSec.style.display = 'none';
+  }
+
   if (processItems.length === 0) {
     pvProc.innerHTML = '<div class="preview-empty">Sin procesos registrados</div>';
   } else {
+    // Recoger los tiempos de addons que tengan extraMinutes
+    const addonProcessRows = state.includeAddons
+      ? state.addons
+          .map((a, idx) => ({
+            addonName: (a.name || '').trim() || `Servicio adicional ${idx + 1}`,
+            taskName: (a.extraMinutesName || '').trim(),
+            minutes: num(a.extraMinutes)
+          }))
+          .filter(a => a.minutes > 0)
+      : [];
     pvProc.innerHTML = processItems.map((p, idx) => `
       <div class="preview-list-row">
         <span class="lbl">${esc(p.name || `Proceso ${idx + 1}`)}</span>
         <span class="val">${fmtMin(num(p.minutes))}</span>
+      </div>
+    `).join('') + addonProcessRows.map(r => `
+      <div class="preview-list-row" style="padding-left: 12px; opacity: 0.85;">
+        <span class="lbl">↳ ${esc(r.taskName || r.addonName)}<span style="color: var(--muted); font-size: 11px;"> · ${esc(r.addonName)}</span></span>
+        <span class="val">${fmtMin(r.minutes)}</span>
       </div>
     `).join('') + `
       <div class="preview-list-row subtotal">
@@ -2681,54 +3637,81 @@ function compute() {
     `;
   }
 
+  // Recoger costes de addons (para mostrar dentro de las secciones de directs/indirects)
+  const addonDirectRows = state.includeAddons
+    ? state.addons
+        .map((a, idx) => ({
+          addonName: (a.name || '').trim() || `Servicio adicional ${idx + 1}`,
+          itemName: (a.extraDirectName || '').trim(),
+          price: num(a.extraDirect)
+        }))
+        .filter(a => a.price > 0)
+    : [];
+  const addonIndirectRows = state.includeAddons
+    ? state.addons
+        .map((a, idx) => ({
+          addonName: (a.name || '').trim() || `Servicio adicional ${idx + 1}`,
+          itemName: (a.extraIndirectName || '').trim(),
+          price: num(a.extraIndirect)
+        }))
+        .filter(a => a.price > 0)
+    : [];
+
   // Render directs section
   const directsSection = document.getElementById('pv-directs-section');
-  if (!state.includeDirects) {
+  const directItems = state.includeDirects
+    ? state.directs.filter(x => num(x.price) > 0 || (x.name || '').trim())
+    : [];
+  // Mostrar sección si hay items globales o addon-directs
+  if (directItems.length === 0 && addonDirectRows.length === 0) {
     directsSection.style.display = 'none';
   } else {
     directsSection.style.display = '';
-    const directItems = state.directs.filter(x => num(x.price) > 0 || (x.name || '').trim());
     const pvDirects = document.getElementById('pv-directs');
-    if (directItems.length === 0) {
-      pvDirects.innerHTML = '<div class="preview-empty">Sin costes directos</div>';
-    } else {
-      pvDirects.innerHTML = directItems.map((x, idx) => `
-        <div class="preview-list-row">
-          <span class="lbl">${esc(x.name || `Coste ${idx + 1}`)}</span>
-          <span class="val">${fmt(num(x.price))}</span>
-        </div>
-      `).join('') + `
-        <div class="preview-list-row subtotal">
-          <span class="lbl">Total costes directos${quantity > 1 ? ` (× ${quantity} uds)` : ''}</span>
-          <span class="val">${fmt(directs)}</span>
-        </div>
-      `;
-    }
+    pvDirects.innerHTML = directItems.map((x, idx) => `
+      <div class="preview-list-row">
+        <span class="lbl">${esc(x.name || `Coste ${idx + 1}`)}</span>
+        <span class="val">${fmt(num(x.price))}</span>
+      </div>
+    `).join('') + addonDirectRows.map(r => `
+      <div class="preview-list-row" style="padding-left: 12px; opacity: 0.85;">
+        <span class="lbl">↳ ${esc(r.itemName || r.addonName)}<span style="color: var(--muted); font-size: 11px;"> · ${esc(r.addonName)}</span></span>
+        <span class="val">${fmt(r.price)}</span>
+      </div>
+    `).join('') + `
+      <div class="preview-list-row subtotal">
+        <span class="lbl">Total costes directos${quantity > 1 ? ` (× ${quantity} uds)` : ''}</span>
+        <span class="val">${fmt(directs)}</span>
+      </div>
+    `;
   }
 
   // Render indirects section
   const indirectsSection = document.getElementById('pv-indirects-section');
-  if (!state.includeIndirects) {
+  const indirectItems = state.includeIndirects
+    ? state.indirects.filter(x => num(x.price) > 0 || (x.name || '').trim())
+    : [];
+  if (indirectItems.length === 0 && addonIndirectRows.length === 0) {
     indirectsSection.style.display = 'none';
   } else {
     indirectsSection.style.display = '';
-    const indirectItems = state.indirects.filter(x => num(x.price) > 0 || (x.name || '').trim());
     const pvIndirects = document.getElementById('pv-indirects');
-    if (indirectItems.length === 0) {
-      pvIndirects.innerHTML = '<div class="preview-empty">Sin costes indirectos o compartidos</div>';
-    } else {
-      pvIndirects.innerHTML = indirectItems.map((x, idx) => `
-        <div class="preview-list-row">
-          <span class="lbl">${esc(x.name || `Coste ${idx + 1}`)}</span>
-          <span class="val">${fmt(num(x.price))}</span>
-        </div>
-      `).join('') + `
-        <div class="preview-list-row subtotal">
-          <span class="lbl">Total costes indirectos o compartidos</span>
-          <span class="val">${fmt(indirects)}</span>
-        </div>
-      `;
-    }
+    pvIndirects.innerHTML = indirectItems.map((x, idx) => `
+      <div class="preview-list-row">
+        <span class="lbl">${esc(x.name || `Coste ${idx + 1}`)}</span>
+        <span class="val">${fmt(num(x.price))}</span>
+      </div>
+    `).join('') + addonIndirectRows.map(r => `
+      <div class="preview-list-row" style="padding-left: 12px; opacity: 0.85;">
+        <span class="lbl">↳ ${esc(r.itemName || r.addonName)}<span style="color: var(--muted); font-size: 11px;"> · ${esc(r.addonName)}</span></span>
+        <span class="val">${fmt(r.price)}</span>
+      </div>
+    `).join('') + `
+      <div class="preview-list-row subtotal">
+        <span class="lbl">Total costes indirectos o compartidos</span>
+        <span class="val">${fmt(indirects)}</span>
+      </div>
+    `;
   }
 
   const supSection = document.getElementById('pv-suplidos-section');
@@ -2775,8 +3758,11 @@ function compute() {
   } else {
     procSection.style.display = '';
     laborSection.style.display = '';
-    directsSec.style.display = state.includeDirects ? '' : 'none';
-    indirectsSec.style.display = state.includeIndirects ? '' : 'none';
+    // Show directs/indirects section if there's anything to show (global items or addon costs)
+    const hasDirectContent = state.includeDirects || addonDirectRows.length > 0;
+    const hasIndirectContent = state.includeIndirects || addonIndirectRows.length > 0;
+    directsSec.style.display = hasDirectContent ? '' : 'none';
+    indirectsSec.style.display = hasIndirectContent ? '' : 'none';
   }
   // Suplidos detail section: hidden for summary AND client (in client there's a toggle for the aggregate line)
   if (isSummary || isClient) {
@@ -2810,10 +3796,11 @@ function compute() {
       finalRows.push({ lbl: 'Servicios adicionales', val: '+ ' + fmt(addonsTotal) });
     } else {
       addonsList.forEach(a => {
+        const autoMark = (a.auto && !isClient) ? ' <span class="auto-mark" title="Precio autocalculado al margen general">★</span>' : '';
         finalRows.push({
           lbl: quantity > 1
-            ? `${esc(a.name)} (${fmt(a.price)} × ${quantity})`
-            : esc(a.name),
+            ? `${esc(a.name)}${autoMark} (${fmt(a.price)} × ${quantity})`
+            : esc(a.name) + autoMark,
           val: '+ ' + fmt(a.price * quantity)
         });
       });
@@ -2937,10 +3924,19 @@ function resetForNewTramite() {
     state.includeNotes = false;
     state.viewMode = 'detailed';
     state.showSuplidosToClient = true;
+    state.flowMode = 'standard';
+    state.empleo = {
+      contractType: 'indefinido', jornadaType: 'completa',
+      hoursPerMonth: '', paymentType: 'mensual',
+      monthlySalary: '', hourlySalary: '',
+      pagasExtraIncluidas: true, pagasExtraTotal: '',
+      familiaNumerosa: 'no'
+    };
     // Keep: state.issuer, state.annualSalary, state.annualHours
     // Reset progress to step 0
-    state.visited = new Set([0]);
-    go(0);
+    state.visited = new Set(['0']);
+    go('0');
+    updateFlowModeVisibility();
     // Clear mode card selection
     document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
     const btn0 = document.getElementById('btn-next-0');
@@ -2955,7 +3951,11 @@ document.getElementById('btnNewTramite').addEventListener('click', resetForNewTr
 
 document.getElementById('btnPrint').addEventListener('click', () => {
   const previewEl = document.getElementById('preview');
-  if (!previewEl || previewEl.offsetHeight < 50) {
+  // Si el preview no es visible (offsetHeight = 0) no podemos confiar en esa medida,
+  // así que comprobamos también si tiene contenido renderizado.
+  const hasContent = previewEl && previewEl.querySelector('.preview-section') &&
+                     previewEl.textContent.trim().length > 100;
+  if (!previewEl || (previewEl.offsetHeight < 50 && !hasContent)) {
     showToast('Introduce los datos del cálculo antes de descargar el PDF');
     return;
   }
@@ -3080,6 +4080,8 @@ ${previewEl.outerHTML}
 
 renderProcesses();
 updateLaborSummary();
+updateFlowModeVisibility();
+updateStepIndicator();
 </script>
 </body>
 </html>
